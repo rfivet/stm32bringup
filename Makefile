@@ -27,7 +27,8 @@ PROJECT = f030f4
 #SRCS = ledtick.c
 #SRCS = cstartup.c
 #SRCS = startup.c init.c success.c
-SRCS = startup.c board.c success.c
+#SRCS = startup.c board.c success.c
+SRCS = startup.c usart1tx.c hello.c
 OBJS = $(SRCS:.c=.o)
 CPU = -mthumb -mcpu=cortex-m0
 CFLAGS = $(CPU) -g -Wall -Wextra -Os
