@@ -5,7 +5,8 @@
 
 ifeq (linux, $(findstring linux, $(MAKE_HOST)))
 #GCCDIR = ~/Packages/gcc-arm-none-eabi-9-2019-q4-major
- GCCDIR = ~/Packages/gcc-arm-none-eabi-9-2020-q2-update
+#GCCDIR = ~/Packages/gcc-arm-none-eabi-9-2020-q2-update
+ GCCDIR = $(HOME)/Packages/gcc-arm-none-eabi-9-2020-q2-update
 else
 #GCCDIR = "D:/Program Files (x86)/GNU Tools ARM Embedded/9 2019-q4-major"
  GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/9 2020-q2-update"
