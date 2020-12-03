@@ -28,11 +28,15 @@ PROJECT = f030f4
 #SRCS = cstartup.c
 #SRCS = startup.c init.c success.c
 #SRCS = startup.c board.c success.c
-SRCS = startup.c usart1tx.c hello.c
+#SRCS = startup.c usart1tx.c hello.c
+SRCS = startup.c uplow.1.c uptime.1.c
 OBJS = $(SRCS:.c=.o)
 CPU = -mthumb -mcpu=cortex-m0
 CFLAGS = $(CPU) -g -Wall -Wextra -Os
 LD_SCRIPT = $(PROJECT).ld
+LIBDIR  = $(GCCDIR)/lib/gcc/arm-none-eabi/9.3.1/thumb/v6-m/nofp
+LIB_PATHS = -L$(LIBDIR)
+LIBS = -lgcc
 
 ### Build rules
 
@@ -46,7 +50,7 @@ clean:
 
 $(PROJECT).elf: $(OBJS)
 	@echo $@
-	$(LD) -T$(LD_SCRIPT) -Map=$(PROJECT).map -cref -o $@ $(OBJS)
+	$(LD) -T$(LD_SCRIPT) $(LIB_PATHS) -Map=$(PROJECT).map -cref -o $@ $^ $(LIBS)
 	$(SIZE) $@
 	$(OBJDUMP) -hS $@ > $(PROJECT).lst
 
