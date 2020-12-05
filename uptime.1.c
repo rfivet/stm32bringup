@@ -1,4 +1,4 @@
-/* uptime.1.c --tells how long the system has been running
+/* uptime.1.c -- tells how long the system has been running
 ** Copyright (c) 2020 Renaud Fivet
 **
 ** v1 displays the number of seconds elapsed since boot

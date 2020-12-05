@@ -30,7 +30,8 @@ PROJECT = f030f4
 #SRCS = startup.c init.c success.c
 #SRCS = startup.c board.c success.c
 #SRCS = startup.c usart1tx.c hello.c
-SRCS = startup.c uplow.1.c uptime.1.c
+#SRCS = startup.c uplow.1.c uptime.1.c
+SRCS = startup.c uplow.2.c uptime.c printf.c putchar.c
 OBJS = $(SRCS:.c=.o)
 CPU = -mthumb -mcpu=cortex-m0
 CFLAGS = $(CPU) -g -Wall -Wextra -Os
