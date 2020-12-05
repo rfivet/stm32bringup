@@ -13,6 +13,7 @@ else
 endif
 
 BINPFX  = @$(GCCDIR)/bin/arm-none-eabi-
+AR      = $(BINPFX)ar
 CC      = $(BINPFX)gcc
 LD      = $(BINPFX)ld
 OBJCOPY = $(BINPFX)objcopy
@@ -31,14 +32,18 @@ PROJECT = f030f4
 #SRCS = startup.c board.c success.c
 #SRCS = startup.c usart1tx.c hello.c
 #SRCS = startup.c uplow.1.c uptime.1.c
-SRCS = startup.c uplow.2.c uptime.c printf.c putchar.c
+#SRCS = startup.c uplow.2.c uptime.c printf.c putchar.c
+#SRCS = startup.c uplow.2.c uptime.c
+SRCS = startup.c uplow.2.c hello.c
 OBJS = $(SRCS:.c=.o)
+LIBOBJS = printf.o putchar.o puts.o
 CPU = -mthumb -mcpu=cortex-m0
 CFLAGS = $(CPU) -g -Wall -Wextra -Os
 LD_SCRIPT = $(PROJECT).ld
 LIBDIR  = $(GCCDIR)/lib/gcc/arm-none-eabi/9.3.1/thumb/v6-m/nofp
-LIB_PATHS = -L$(LIBDIR)
-LIBS = -lgcc
+LIB_PATHS = -L. -L$(LIBDIR)
+LIBSTEM = stm32
+LIBS = -l$(LIBSTEM) -lgcc
 
 ### Build rules
 
@@ -48,11 +53,11 @@ all: $(PROJECT).hex $(PROJECT).bin
 
 clean:
 	@echo CLEAN
-	@rm -f *.o *.elf *.map *.lst *.bin *.hex
+	@rm -f *.o *.elf *.map *.lst *.bin *.hex *.a
 
-$(PROJECT).elf: $(OBJS)
+$(PROJECT).elf: $(OBJS) lib$(LIBSTEM).a
 	@echo $@
-	$(LD) -T$(LD_SCRIPT) $(LIB_PATHS) -Map=$(PROJECT).map -cref -o $@ $^ $(LIBS)
+	$(LD) -T$(LD_SCRIPT) $(LIB_PATHS) -Map=$(PROJECT).map -cref -o $@ $(OBJS) $(LIBS)
 	$(SIZE) $@
 	$(OBJDUMP) -hS $@ > $(PROJECT).lst
 
@@ -69,3 +74,6 @@ $(PROJECT).elf: $(OBJS)
 %.hex: %.elf
 	@echo $@
 	$(OBJCOPY) -O ihex $< $@
+
+lib$(LIBSTEM).a: $(LIBOBJS)
+	$(AR) rc $@ $?
