@@ -35,7 +35,8 @@ PROJECT = f030f4
 #SRCS = startup.c uplow.2.c uptime.c printf.c putchar.c
 #SRCS = startup.c uplow.2.c uptime.c
 #SRCS = startup.c uplow.2.c hello.c
-SRCS = startup.c clocks.c uptime.c
+#SRCS = startup.c clocks.c uptime.c
+SRCS = startup.txeie.c txeie.c uptime.c
 OBJS = $(SRCS:.c=.o)
 LIBOBJS = printf.o putchar.o puts.o
 CPU = -mthumb -mcpu=cortex-m0
