@@ -22,4 +22,13 @@ iolvl_t  gpioa_read( int pin) ;     /* Read level of GPIOA pin */
 
 void usleep( unsigned usecs) ;      /* wait at least usecs us */
 
+typedef enum {
+    VNT_INIT,
+    VNT_CAL,
+    VNT_RAW,
+    VNT_VNC
+} vnt_cmd_t ;
+
+void adc_vnt( vnt_cmd_t cmd, short *ptrV, short *ptrC) ;
+
 /* end of system.h */
