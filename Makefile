@@ -39,7 +39,8 @@ PROJECT = f030f4
 #SRCS = startup.txeie.c txeie.c uptime.c
 #SRCS = startup.txeie.c gpioa.c dht11main.c dht11.c
 #SRCS = startup.txeie.c gpioa.c ds18b20main.c ds18b20.c
-SRCS = startup.txeie.c adc.c adcmain.c
+#SRCS = startup.txeie.c adc.c adcmain.c
+SRCS = startup.txeie.c adc.c adccalib.c ds18b20.c
 OBJS = $(SRCS:.c=.o)
 LIBOBJS = printf.o putchar.o puts.o
 CPU = -mthumb -mcpu=cortex-m0
