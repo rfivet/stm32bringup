@@ -1,21 +1,32 @@
 # Makefile -- stm32bringup
-# Copyright (c) 2020 Renaud Fivet
+# Copyright (c) 2020-2021 Renaud Fivet
 
 ### Build environment selection
 
 ifeq (linux, $(findstring linux, $(MAKE_HOST)))
-#GCCDIR = ~/Packages/gcc-arm-none-eabi-9-2019-q4-major
-#GCCDIR = ~/Packages/gcc-arm-none-eabi-9-2020-q2-update
- GCCDIR = $(HOME)/Packages/gcc-arm-none-eabi-9-2020-q2-update
+ INSTALLDIR = $(HOME)/Packages
+#GCCDIR = $(INSTALLDIR)/gcc-arm-none-eabi-9-2019-q4-major
+#GCCDIR = $(INSTALLDIR)/gcc-arm-none-eabi-9-2020-q2-update
+ GCCDIR = $(INSTALLDIR)/gcc-arm-none-eabi-10-2020-q4-major
 else
-#GCCDIR = "D:/Program Files (x86)/GNU Tools ARM Embedded/9 2019-q4-major"
- GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/9 2020-q2-update"
+ifeq (cygwin, $(findstring cygwin, $(MAKE_HOST)))
+ DRIVE = /cygdrive/d
+else ifeq (msys, $(findstring msys, $(MAKE_HOST)))
+ DRIVE = /d
+else
+ DRIVE = D:
+endif
+ INSTALLDIR = $(DRIVE)/Program Files (x86)
+#GCCDIR = $(INSTALLDIR)/GNU Tools ARM Embedded/9 2019-q4-major
+#GCCDIR = $(INSTALLDIR)/GNU Arm Embedded Toolchain/9 2020-q2-update
+ GCCDIR = $(INSTALLDIR)/GNU Arm Embedded Toolchain/10 2020-q4-major
 endif
 
-BINPFX  = @$(GCCDIR)/bin/arm-none-eabi-
+export PATH := $(GCCDIR)/bin:$(PATH)
+
+BINPFX  = @arm-none-eabi-
 AR      = $(BINPFX)ar
 CC      = $(BINPFX)gcc
-LD      = $(BINPFX)ld
 OBJCOPY = $(BINPFX)objcopy
 OBJDUMP = $(BINPFX)objdump
 SIZE    = $(BINPFX)size
@@ -42,14 +53,12 @@ PROJECT = f030f4
 #SRCS = startup.txeie.c adc.c adcmain.c
 SRCS = startup.txeie.c adc.c adccalib.c ds18b20.c
 OBJS = $(SRCS:.c=.o)
-LIBOBJS = printf.o putchar.o puts.o
+LIBOBJS = printf.o putchar.o puts.o memset.o
 CPU = -mthumb -mcpu=cortex-m0
 CFLAGS = $(CPU) -g -Wall -Wextra -Os
 LD_SCRIPT = $(PROJECT).ld
-LIBDIR  = $(GCCDIR)/lib/gcc/arm-none-eabi/9.3.1/thumb/v6-m/nofp
-LIB_PATHS = -L. -L$(LIBDIR)
 LIBSTEM = stm32
-LIBS = -l$(LIBSTEM) -lgcc
+LIBS = -l$(LIBSTEM)
 
 ### Build rules
 
@@ -63,13 +72,15 @@ clean:
 
 $(PROJECT).elf: $(OBJS) lib$(LIBSTEM).a
 	@echo $@
-	$(LD) -T$(LD_SCRIPT) $(LIB_PATHS) -Map=$(PROJECT).map -cref -o $@ $(OBJS) $(LIBS)
+	$(CC) $(CPU) -T$(LD_SCRIPT) -L. -Wl,-Map=$(PROJECT).map,-cref \
+		-nostartfiles -o $@ $(OBJS) $(LIBS)
 	$(SIZE) $@
 	$(OBJDUMP) -hS $@ > $(PROJECT).lst
 
-%.elf: %.o
+%.elf: %.o lib$(LIBSTEM).a
 	@echo $@
-	$(LD) -T$(LD_SCRIPT) -Map=$*.map -cref -o $@ $<
+	$(CC) $(CPU) -T$(LD_SCRIPT) -L. -Wl,-Map=$*.map,-cref -nostartfiles \
+		-o $@ $< $(LIBS)
 	$(SIZE) $@
 	$(OBJDUMP) -hS $@ > $*.lst
 
