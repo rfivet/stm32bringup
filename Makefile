@@ -5,23 +5,29 @@
 
 ifeq (linux, $(findstring linux, $(MAKE_HOST)))
  INSTALLDIR = $(HOME)/Packages
-#GCCDIR = $(INSTALLDIR)/gcc-arm-none-eabi-9-2019-q4-major
-#GCCDIR = $(INSTALLDIR)/gcc-arm-none-eabi-9-2020-q2-update
- GCCDIR = $(INSTALLDIR)/gcc-arm-none-eabi-10-2020-q4-major
+#REVDIR = gcc-arm-none-eabi-9-2019-q4-major
+#REVDIR = gcc-arm-none-eabi-9-2020-q2-update
+ REVDIR = gcc-arm-none-eabi-10-2020-q4-major
 else
+ DRIVE = d
 ifeq (cygwin, $(findstring cygwin, $(MAKE_HOST)))
- DRIVE = /cygdrive/d
+ OSDRIVE = /cygdrive/$(DRIVE)
 else ifeq (msys, $(findstring msys, $(MAKE_HOST)))
- DRIVE = /d
+ OSDRIVE = /$(DRIVE)
 else
- DRIVE = D:
+ OSDRIVE = $(DRIVE):
 endif
- INSTALLDIR = $(DRIVE)/Program Files (x86)
-#GCCDIR = $(INSTALLDIR)/GNU Tools ARM Embedded/9 2019-q4-major
-#GCCDIR = $(INSTALLDIR)/GNU Arm Embedded Toolchain/9 2020-q2-update
- GCCDIR = $(INSTALLDIR)/GNU Arm Embedded Toolchain/10 2020-q4-major
+ INSTALLDIR = $(OSDRIVE)/Program Files (x86)
+#REVDIR = GNU Tools ARM Embedded/5.4 2016q2
+#REVDIR = GNU Tools ARM Embedded/6 2017-q2-update
+#REVDIR = GNU Tools ARM Embedded/7 2017-q4-major
+#REVDIR = GNU Tools ARM Embedded/7 2018-q2-update
+#REVDIR = GNU Tools ARM Embedded/9 2019-q4-major
+#REVDIR = GNU Arm Embedded Toolchain/9 2020-q2-update
+ REVDIR = GNU Arm Embedded Toolchain/10 2020-q4-major
 endif
 
+GCCDIR = $(INSTALLDIR)/$(REVDIR)
 export PATH := $(GCCDIR)/bin:$(PATH)
 
 BINPFX  = @arm-none-eabi-
@@ -62,9 +68,13 @@ LIBS = -l$(LIBSTEM)
 
 ### Build rules
 
-.PHONY: clean all
+.PHONY: clean all version
 
 all: $(PROJECT).hex $(PROJECT).bin
+
+version:
+	@echo make $(MAKE_VERSION) $(MAKE_HOST)
+	@echo PATH="$(PATH)"
 
 clean:
 	@echo CLEAN
