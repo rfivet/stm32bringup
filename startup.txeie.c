@@ -1,5 +1,5 @@
 /* startup.txeie.c -- entry point at reset and C startup
-** Copyright (c) 2020 Renaud Fivet
+** Copyright (c) 2020-2021 Renaud Fivet
 ** v6: device specific interrupts mapped
 ** v5: System Exceptions mapped
 ** v4: calls to init() and main()
@@ -11,7 +11,7 @@
 #include "system.h" /* init() */
 
 /* Memory locations defined by linker script */
-extern long __StackTop ;        /* &__StackTop points after end of stack */
+void __StackTop( void) ;        /* __StackTop points after end of stack */
 void Reset_Handler( void) ;     /* Entry point for execution */
 extern const long __etext[] ;   /* start of initialized data copy in flash */
 extern long __data_start__[] ;
@@ -63,7 +63,7 @@ dflt_hndlr( USB) ;
  */
 typedef void (*isr_p)( void) ;
 isr_p const isr_vector[ 16 + 32] __attribute__((section(".isr_vector"))) = {
-    (isr_p) &__StackTop,
+    __StackTop,
 /* System Exceptions */
     Reset_Handler,
     NMI_Handler,

@@ -21,7 +21,7 @@ void ds18b20_init( void) {
     input() ;           /* Wire floating, HIGH by pull-up */
 }
 
-static ds18b20_retv_t initialization() {
+static ds18b20_retv_t initialization( void) {
 /* Reset */
     output() ;          /* Wire LOW */
     usleep( 480) ;

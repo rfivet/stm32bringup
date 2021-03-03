@@ -1,9 +1,9 @@
 /* cstartup.c -- data and bss RAM memory initialization
-** Copyright (c) 2020 Renaud Fivet
+** Copyright (c) 2020-2021 Renaud Fivet
 */
 
 /* Memory locations defined by linker script */
-extern long __StackTop ;        /* &__StackTop points after end of stack */
+void __StackTop( void) ;        /* __StackTop points after end of stack */
 void Reset_Handler( void) ;     /* Entry point for execution */
 extern const long __etext[] ;   /* start of initialized data copy in flash */
 extern long __data_start__[] ;
@@ -17,12 +17,12 @@ extern long __bss_end__ ;       /* &__bss_end__ points after end of bss */
  */
 typedef void (*isr_p)( void) ;
 isr_p const isr_vector[ 2] __attribute__((section(".isr_vector"))) = {
-    (isr_p) &__StackTop,
+    __StackTop,
 /* System Exceptions */
     Reset_Handler
 } ;
 
-extern int main( void) ;
+int main( void) ;
 
 void Reset_Handler( void) {
     const long  *f ;    /* from, source constant data from FLASH */

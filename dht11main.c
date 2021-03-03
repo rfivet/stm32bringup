@@ -1,11 +1,11 @@
-/* dht11main.c -- sample DHT11 sensor */
-/* Copyright (c) 2020 Renaud Fivet    */
+/* dht11main.c -- sample DHT11 sensor   */
+/* Copyright (c) 2020-2021 Renaud Fivet */
 #include <stdio.h>
 
 #include "system.h"
 #include "dht11.h"
 
-int main() {
+int main( void) {
     static unsigned last ;
 
     dht11_init() ;

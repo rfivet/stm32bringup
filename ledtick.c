@@ -1,9 +1,9 @@
 /* ledtick.c -- System Tick driven user LED blink
-** Copyright (c) 2020 Renaud Fivet
+** Copyright (c) 2020-2021 Renaud Fivet
 */
 
 /* Memory locations defined by linker script */
-extern long __StackTop ;        /* &__StackTop points after end of stack */
+void __StackTop( void) ;        /* __StackTop points after end of stack */
 void Reset_Handler( void) ;     /* Entry point for execution */
 
 void SysTick_Handler( void) ;
@@ -15,7 +15,7 @@ void SysTick_Handler( void) ;
  */
 typedef void (*isr_p)( void) ;
 isr_p const isr_vector[ 16] __attribute__((section(".isr_vector"))) = {
-    (isr_p) &__StackTop,
+    __StackTop,
 /* System Exceptions */
     Reset_Handler,
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,

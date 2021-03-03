@@ -1,5 +1,5 @@
 /* dht11.c -- DHT11 humidity and temperature sensor reading */
-/* Copyright (c) 2020 Renaud Fivet                          */
+/* Copyright (c) 2020-2021 Renaud Fivet                     */
 
 #include "dht11.h"      /* implements DHT11 API */
 
@@ -49,7 +49,7 @@ dht11_retv_t dht11_read( void) {
  *  0 coded as 50us low then 26~28us high
  *  1 coded as 50us low then 70us high
  */
-    wait_level( LOW) ; /* HIGH -> LOW, ends, 80us high, starts 50us low */
+    wait_level( LOW) ; /* HIGH -> LOW, ends 80us high, starts 50us low */
     int threshold = (MAX_RETRIES + retries) / 2 ;
 
     unsigned char sum = 0 ;
