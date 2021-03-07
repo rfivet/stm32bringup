@@ -41,19 +41,24 @@ SIZE    = $(BINPFX)size
 
 PROJECT = f030f4.$(FLASHSTART)
 
-# In RAM Execution, Bootloader uses first 2K of RAM
+# In RAM Execution
+# Bootloader uses first 2K of RAM, execution from bootloader
 #FLASHSTART = 0x20000800
 #FLASHSIZE  = 2K
 #RAMSTART   = 0x20000000
 #RAMSIZE    = 2K
-#RAMISRV    = 1
 
-# In Flash Execution, ISR vector copied and mapped to RAM if RAMISRV is not 0
+# In Flash Execution
+# if FLASHSTART is not at beginning of FLASH: execution from bootloader
 FLASHSTART = 0x08000000
 FLASHSIZE  = 16K
 RAMSTART   = 0x20000000
 RAMSIZE    = 4K
-#RAMISRV    = 1
+
+# ISR vector copied and mapped to RAM if FLASHSTART != 0x08000000
+ifneq ($(FLASHSTART),0x08000000)
+ RAMISRV := 1
+endif
 
 #SRCS = boot.c
 #SRCS = ledon.c
