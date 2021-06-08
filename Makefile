@@ -39,7 +39,7 @@ SIZE    = $(BINPFX)size
 
 ### STM32F030F4P6 based board
 
-PROJECT = f030f4.$(FLASHSTART)
+PROJECT = f030f4
 
 # In RAM Execution
 # Bootloader uses first 2K of RAM, execution from bootloader
@@ -90,16 +90,18 @@ WARNINGS=-pedantic -Wall -Wextra -Wstrict-prototypes -Wno-unused-parameter
 CFLAGS = $(CPU) -g $(WARNINGS) -Os $(CDEFINES)
 
 LD_SCRIPT = generic.ld
-LDDEFS = --defsym,FLASHSTART=$(FLASHSTART),--defsym,FLASHSIZE=$(FLASHSIZE)
-LDDEFINES = $(LDDEFS),--defsym,RAMSTART=$(RAMSTART),--defsym,RAMSIZE=$(RAMSIZE)
-LIBSTEM = stm32
-LIBS = -l$(LIBSTEM)
+LDOPTS  =--defsym FLASHSTART=$(FLASHSTART) --defsym FLASHSIZE=$(FLASHSIZE)
+LDOPTS +=--defsym RAMSTART=$(RAMSTART) --defsym RAMSIZE=$(RAMSIZE)
+LDOPTS +=-Map=$(subst .elf,.map,$@) -cref --print-memory-usage
+comma :=,
+space :=$() # one space before the comment
+LDFLAGS =-Wl,$(subst $(space),$(comma),$(LDOPTS))
 
 ### Build rules
 
 .PHONY: clean all version
 
-all: $(PROJECT).hex $(PROJECT).bin
+all: $(PROJECT).hex $(PROJECT).$(FLASHSTART).bin
 
 version:
 	@echo make $(MAKE_VERSION) $(MAKE_HOST)
@@ -110,21 +112,24 @@ clean:
 	@echo CLEAN
 	@rm -f *.o *.elf *.map *.lst *.bin *.hex *.a
 
-$(PROJECT).elf: $(OBJS) lib$(LIBSTEM).a
-	@echo $@
-	$(CC) $(CPU) -T$(LD_SCRIPT) -L. -Wl,$(LDDEFINES),-Map=$(PROJECT).map,-cref \
--nostartfiles -o $@ $(OBJS) $(LIBS)
-	$(SIZE) $@
-	$(OBJDUMP) -hS $@ > $(PROJECT).lst
+$(PROJECT).elf: $(OBJS) libstm32.a
+boot.elf: boot.o
+ledon.elf: ledon.o
+blink.elf: blink.o
+ledtick.elf: ledtick.o
+cstartup.elf: cstartup.o
 
-%.elf: %.o lib$(LIBSTEM).a
+%.elf:
 	@echo $@
-	$(CC) $(CPU) -T$(LD_SCRIPT) -L. -Wl,$(LDDEFINES),-Map=$*.map,-cref \
--nostartfiles -o $@ $< $(LIBS)
-	$(SIZE) $@
-	$(OBJDUMP) -hS $@ > $*.lst
+	$(CC) $(CPU) -T$(LD_SCRIPT) $(LDFLAGS) -nostartfiles -o $@ $+
+	$(SIZE) -G $@
+	$(OBJDUMP) -hS $@ > $(subst .elf,.lst,$@)
 
 %.bin: %.elf
+	@echo $@
+	$(OBJCOPY) -O binary $< $@
+
+%.$(FLASHSTART).bin: %.elf
 	@echo $@
 	$(OBJCOPY) -O binary $< $@
 
@@ -132,5 +137,5 @@ $(PROJECT).elf: $(OBJS) lib$(LIBSTEM).a
 	@echo $@
 	$(OBJCOPY) -O ihex $< $@
 
-lib$(LIBSTEM).a: $(LIBOBJS)
+libstm32.a: $(LIBOBJS)
 	$(AR) rc $@ $?

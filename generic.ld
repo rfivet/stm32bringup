@@ -74,7 +74,6 @@ SECTIONS
 		*(.rodata*)
 
 		*(.eh_frame*)
-		. = ALIGN(4);
 	} > FLASH
 
 	.ARM.extab : 
@@ -129,7 +128,7 @@ SECTIONS
 	__etext = ALIGN (4);
 
 	/* In RAM isr vector reserved space at beginning of RAM */
-	.isrdata (COPY):
+	.isrdata (NOLOAD):
 	{
 		KEEP(*(.ram_vector))
 	} > RAM

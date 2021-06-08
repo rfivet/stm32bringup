@@ -70,7 +70,6 @@ SECTIONS
 		*(.rodata*)
 
 		*(.eh_frame*)
-		. = ALIGN(4);
 	} > FLASH
 
 	.ARM.extab : 
