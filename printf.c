@@ -17,9 +17,8 @@ size_t strlen( const char *s) {
     return end - s ;
 }
 
-#define ZEROPAD     (1 << 3)
-#define LEFTALIGN   (3 << 2)
-#define LEFTMASK    4
+#define LEFTALIGN   (1 << 3)
+#define ZEROPAD     (1 << 2)
 #define PLUSSIGN    (1 << 1)
 #define BLANKSIGN   (1 << 0)
 
@@ -41,52 +40,62 @@ static int kputpad( char c, int len) {
             kputc( c) ;
     } else
         cnt = 0 ;
+        
+    return cnt ;
+}
+
+static int kputwidth( char *s, int left_aligned, int width) {
+    int cnt = left_aligned ? 0 : kputpad( ' ', width - strlen( s)) ;
+    int size = kputs( s) ;
+    cnt += size ;
+    if( left_aligned)
+        cnt += kputpad( ' ', width - size) ;
 
     return cnt ;
 }
 
-static int kputu( unsigned u, int padlen, char fmt) {
-    char s[ 12] ;                   /* room for 11 octal digit + EOS */
+static int kputu( unsigned u, int flags, int width, char fmt) {
+#define MAXDIGITS   11
+    char s[ MAXDIGITS + 1] ;        /* room for 11 octal digit + EOS */
+                                    /* octal 37777777777, decimal -2147483647 */
     char *p = &s[ sizeof s - 1] ;   /* point to last byte */
     char signprefix ;
 
     *p = 0 ;                        /* null terminated string */
-
-    int flags = padlen >> 28 ;
-    padlen &= 0x0FFFFFFF ;          /* clear flags */
-    if( fmt == 'i' && (0 > (int) u)) {
+    if( fmt != 'i')
+    /* ouxX (d has been converted to i) */
+        signprefix = 0 ;
+    else if( 0 > (int) u) {
         u = - (int) u ;
         signprefix = '-' ;
     } else
         signprefix = signs[ flags & 3] ;
 
-    if( signprefix)
-        padlen -= 1 ;
-
     unsigned d = base[ fmt & 3] ;
     fmt = fmt & 0x20 ;              /* set uppercase bit */
     do {
         *--p = "0123456789ABCDEF"[ u % d] | fmt ;
-        padlen -= 1 ;
         u /= d ;
     } while( u) ;
 
-/* reuse u to calculate output length */
-    flags >>= 2 ;
-    if( !flags)     /* Right align */
-        u += kputpad( ' ', padlen) ;
+    if( signprefix)
+        *--p = signprefix ;
 
-    if( signprefix) {
-        kputc( signprefix) ;
-        u += 1 ;
-    }
+    int size = MAXDIGITS - (p - s) ;    /* string length */
+/* reuse u to return output length */
+    if( width <= size)
+        u = kputs( p) ;
+    else if( (flags & 0x0C) == ZEROPAD) {   /* LEFTALIGN precedence over ZEROPAD */
+    /* handle zero padding */
+        if( signprefix)
+            kputc( *p++) ;
 
-    if( flags == (ZEROPAD >> 2))
-        u += kputpad( '0', padlen) ;
-
-    u += kputs( p) ;
-    if( flags == (LEFTALIGN >> 2))
-        u += kputpad( ' ', padlen) ;
+        kputpad( '0', width - size) ;
+        kputs( p) ;
+        u = width ;
+    } else
+    /* handle left and right alignment */
+        u = kputwidth( p, flags >> 3, width) ;
 
     return u ;
 }
@@ -95,6 +104,7 @@ int printf( const char *fmt, ...) {
     va_list ap ;
     int cnt = 0 ;
     int c ; /* current char in format string */
+    char *sp ;
 
     va_start( ap, fmt) ;
     while( ( c = *fmt++) != 0)
@@ -141,13 +151,14 @@ int printf( const char *fmt, ...) {
 
             switch( c) {
             case 'c':
-                flags >>= 2 ;
-                if( !flags) /* right aligned */
-                    cnt += kputpad( ' ', width - 1) ;
-
-                cnt += 1 ; kputc( va_arg( ap, int /* char */)) ;
-                if( flags == (LEFTALIGN >> 2))
-                    cnt += kputpad( ' ', width - 1) ;
+                c = va_arg( ap, int) ;
+                if( width > 1) {
+                /* handle left and right alignment */
+                    sp = (char *) &c ;
+                    goto s_width ;
+                } else {
+                    cnt += 1 ; kputc( c) ;
+                }
 
                 break ;
             case 'd':
@@ -158,19 +169,16 @@ int printf( const char *fmt, ...) {
             case 'u':
             case 'x':
             case 'X':
-                cnt += kputu( va_arg( ap, unsigned), width | flags << 28, c) ;
+                cnt += kputu( va_arg( ap, unsigned), flags, width, c) ;
                 break ;
-            case 's': {
-                    char *argp = va_arg( ap, char *) ;
-                    flags >>= 2 ;
-                    if( !flags) /* right aligned */
-                        cnt += kputpad( ' ', width - strlen( argp)) ;
-
-                    int size = kputs( argp) ;
-                    cnt += size ;
-                    if( flags == (LEFTMASK >> 2))
-                        cnt += kputpad( ' ', width - size) ;
-                }
+            case 's':
+                sp = va_arg( ap, char *) ;
+                if( width)
+                /* handle left and right alignment */
+                s_width:
+                    cnt += kputwidth( sp, flags >> 3, width) ;
+                else
+                    cnt += kputs( sp) ;
 
                 break ;
             default:
