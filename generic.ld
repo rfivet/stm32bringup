@@ -11,8 +11,10 @@
 MEMORY
 {
 /* FLASH means code, read only data and data initialization */
-	FLASH (rx)  : ORIGIN = FLASHSTART, LENGTH =  FLASHSIZE
-	RAM   (rwx) : ORIGIN = RAMSTART,   LENGTH =  RAMSIZE
+	FLASH (rx) : ORIGIN = DEFINED(FLASHSTART) ? FLASHSTART : 0x08000000,
+		LENGTH =  DEFINED(FLASHSIZE) ? FLASHSIZE : 16K
+	RAM  (rwx) : ORIGIN = DEFINED(RAMSTART) ? RAMSTART : 0x20000000,
+		LENGTH =  DEFINED(RAMSIZE) ? RAMSIZE : 4K
 }
 
 /* Linker script to place sections and symbol values. Should be used together

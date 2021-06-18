@@ -110,7 +110,7 @@ isr_p const isr_vector[ 16 + 32] __attribute__((section(".isr_vector"))) = {
     USB_Handler
 } ;
 
-#if RAMISRV
+#if RAMISRV == 2
 # define ISRV_SIZE (sizeof isr_vector / sizeof *isr_vector)
 isr_p ram_vector[ ISRV_SIZE] __attribute__((section(".ram_vector"))) ;
 #endif
@@ -121,7 +121,7 @@ void Reset_Handler( void) {
     const long  *f ;    /* from, source constant data from FLASH */
     long    *t ;        /* to, destination in RAM */
 
-#if RAMISRV
+#if RAMISRV == 2
 /* Copy isr vector to beginning of RAM */
     for( unsigned i = 0 ; i < ISRV_SIZE ; i++)
         ram_vector[ i] = isr_vector[ i] ;

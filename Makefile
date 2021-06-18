@@ -41,23 +41,41 @@ SIZE    = $(BINPFX)size
 
 PROJECT = f030f4
 
-# In RAM Execution
+### Memory Models
+
+# In RAM Execution, load and start by USART bootloader
 # Bootloader uses first 2K of RAM, execution from bootloader
 #FLASHSTART = 0x20000800
 #FLASHSIZE  = 2K
 #RAMSTART   = 0x20000000
 #RAMSIZE    = 2K
 
+# In RAM Execution, load and start via SWD
+# 4K RAM available, execution via SWD
+#FLASHSTART = 0x20000000
+#FLASHSIZE  = 3K
+#RAMSTART   = 0x20000C00
+#RAMSIZE    = 1K
+
 # In Flash Execution
-# if FLASHSTART is not at beginning of FLASH: execution from bootloader
+# if FLASHSTART is not at beginning of FLASH: execution via bootloader or SWD
 FLASHSTART = 0x08000000
 FLASHSIZE  = 16K
 RAMSTART   = 0x20000000
 RAMSIZE    = 4K
 
 # ISR vector copied and mapped to RAM if FLASHSTART != 0x08000000
-ifneq ($(FLASHSTART),0x08000000)
- RAMISRV := 1
+ifdef FLASHSTART
+ ifneq ($(FLASHSTART),0x08000000)
+  ifeq ($(FLASHSTART),0x20000000)
+   # Map isr vector in RAM
+   RAMISRV := 1
+  else
+   # Copy and map isr vector in RAM
+   RAMISRV := 2
+  endif
+ endif
+ FNAMLOC = .$(FLASHSTART)
 endif
 
 #SRCS = boot.c
@@ -90,8 +108,10 @@ WARNINGS=-pedantic -Wall -Wextra -Wstrict-prototypes -Wno-unused-parameter
 CFLAGS = $(CPU) -g $(WARNINGS) -Os $(CDEFINES)
 
 LD_SCRIPT = generic.ld
-LDOPTS  =--defsym FLASHSTART=$(FLASHSTART) --defsym FLASHSIZE=$(FLASHSIZE)
-LDOPTS +=--defsym RAMSTART=$(RAMSTART) --defsym RAMSIZE=$(RAMSIZE)
+ifdef FLASHSTART
+ LDOPTS  =--defsym FLASHSTART=$(FLASHSTART) --defsym FLASHSIZE=$(FLASHSIZE)
+ LDOPTS +=--defsym RAMSTART=$(RAMSTART) --defsym RAMSIZE=$(RAMSIZE)
+endif
 LDOPTS +=-Map=$(subst .elf,.map,$@) -cref --print-memory-usage
 comma :=,
 space :=$() # one space before the comment
@@ -101,7 +121,7 @@ LDFLAGS =-Wl,$(subst $(space),$(comma),$(LDOPTS))
 
 .PHONY: clean all version
 
-all: $(PROJECT).hex $(PROJECT).$(FLASHSTART).bin
+all: $(PROJECT).hex $(PROJECT)$(FNAMLOC).bin
 
 version:
 	@echo make $(MAKE_VERSION) $(MAKE_HOST)
@@ -125,11 +145,13 @@ cstartup.elf: cstartup.o
 	$(SIZE) -G $@
 	$(OBJDUMP) -hS $@ > $(subst .elf,.lst,$@)
 
+ifdef FNAMLOC
 %.bin: %.elf
 	@echo $@
 	$(OBJCOPY) -O binary $< $@
+endif
 
-%.$(FLASHSTART).bin: %.elf
+%$(FNAMLOC).bin: %.elf
 	@echo $@
 	$(OBJCOPY) -O binary $< $@
 
