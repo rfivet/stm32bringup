@@ -1,5 +1,5 @@
-/* generic.ld -- parametrized linker script */
-/* Copyright (c) 2021 Renaud Fivet          */
+/* generic.ld -- parameterized linker script */
+/* Copyright (c) 2021 Renaud Fivet           */
 
 /* Linker script to configure memory regions. 
  * Need modifying for a specific board. 
@@ -194,6 +194,11 @@ SECTIONS
 	{
 		*(.stack*)
 	} > RAM
+
+	.crc : AT (__etext + (__data_end__ - __data_start__))
+	{
+		KEEP(*(.crc_chk))
+	} > FLASH
 
 	/* Set stack top to end of RAM, and stack limit move down by
 	 * size of stack_dummy section */

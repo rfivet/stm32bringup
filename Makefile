@@ -42,6 +42,7 @@ SIZE    = $(BINPFX)size
 PROJECT = f030f4
 
 ### Memory Models
+# By default we use the memory mapping from linker script
 
 # In RAM Execution, load and start by USART bootloader
 # Bootloader uses first 2K of RAM, execution from bootloader
@@ -59,12 +60,12 @@ PROJECT = f030f4
 
 # In Flash Execution
 # if FLASHSTART is not at beginning of FLASH: execution via bootloader or SWD
-FLASHSTART = 0x08000000
-FLASHSIZE  = 16K
-RAMSTART   = 0x20000000
-RAMSIZE    = 4K
+#FLASHSTART = 0x08000000
+#FLASHSIZE  = 16K
+#RAMSTART   = 0x20000000
+#RAMSIZE    = 4K
 
-# ISR vector copied and mapped to RAM if FLASHSTART != 0x08000000
+# ISR vector copied and mapped to RAM when FLASHSTART != 0x08000000
 ifdef FLASHSTART
  ifneq ($(FLASHSTART),0x08000000)
   ifeq ($(FLASHSTART),0x20000000)
@@ -75,8 +76,14 @@ ifdef FLASHSTART
    RAMISRV := 2
   endif
  endif
- FNAMLOC = .$(FLASHSTART)
+ BINLOC  = $(FLASHSTART)
+else
+ BINLOC  = 0x08000000
 endif
+
+# build options
+CRC32SIGN := 1
+
 
 #SRCS = boot.c
 #SRCS = ledon.c
@@ -96,7 +103,8 @@ endif
 #SRCS = startup.txeie.c gpioa.c ds18b20main.c ds18b20.c
 #SRCS = startup.txeie.c adc.c adcmain.c
 #SRCS = startup.txeie.c adc.c adccalib.c ds18b20.c
- SRCS = startup.ram.c txeie.c uptime.1.c
+#SRCS = startup.ram.c txeie.c uptime.1.c
+ SRCS = startup.crc.c txeie.c uptime.1.c
 OBJS = $(SRCS:.c=.o)
 LIBOBJS = printf.o putchar.o puts.o memset.o memcpy.o
 
@@ -104,7 +112,10 @@ CPU = -mthumb -mcpu=cortex-m0
 ifdef RAMISRV
  CDEFINES = -DRAMISRV=$(RAMISRV)
 endif
-WARNINGS=-pedantic -Wall -Wextra -Wstrict-prototypes -Wno-unused-parameter
+ifdef CRC32SIGN
+ CDEFINES += -DCRC32SIGN=$(CRC32SIGN)
+endif
+WARNINGS=-pedantic -Wall -Wextra -Wstrict-prototypes
 CFLAGS = $(CPU) -g $(WARNINGS) -Os $(CDEFINES)
 
 LD_SCRIPT = generic.ld
@@ -121,7 +132,7 @@ LDFLAGS =-Wl,$(subst $(space),$(comma),$(LDOPTS))
 
 .PHONY: clean all version
 
-all: $(PROJECT).hex $(PROJECT)$(FNAMLOC).bin
+all: $(PROJECT).$(BINLOC).bin $(PROJECT).hex
 
 version:
 	@echo make $(MAKE_VERSION) $(MAKE_HOST)
@@ -145,15 +156,21 @@ cstartup.elf: cstartup.o
 	$(SIZE) -G $@
 	$(OBJDUMP) -hS $@ > $(subst .elf,.lst,$@)
 
-ifdef FNAMLOC
 %.bin: %.elf
 	@echo $@
 	$(OBJCOPY) -O binary $< $@
-endif
 
-%$(FNAMLOC).bin: %.elf
+%.$(BINLOC).bin: %.elf
 	@echo $@
 	$(OBJCOPY) -O binary $< $@
+ifdef CRC32SIGN
+	crc32/sign32 $@
+	mv signed.bin $@
+
+%.hex: %.$(BINLOC).bin
+	@echo $@
+	$(OBJCOPY) --change-address=$(BINLOC) -I binary -O ihex $< $@ 
+endif
 
 %.hex: %.elf
 	@echo $@

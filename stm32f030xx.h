@@ -39,10 +39,11 @@
 #define RCC_CFGR_PLLXTPRE       0x00020000
 #define RCC_CFGR_PLLXTPRE_DIV1  0x00000000  /* HSE */
 #define RCC_CFGR_PLLXTPRE_DIV2  0x00020000  /* HSE / 2 */
-#define RCC_CFGR_PLLMUL_MSK     (0x00F << 18)
+#define RCC_CFGR_PLLMUL_MSK     (0x0F << 18)
 #define RCC_CFGR_PLLMUL( v)     ((v - 2) << 18)
 
 #define RCC_AHBENR              RCC[ 5]
+#define RCC_AHBENR_CRCEN        (1 << 6)    /*  6: CRC clock enable */
 #define RCC_AHBENR_IOPn( n)     (1 << (17 + n))
 #define RCC_AHBENR_IOPh( h)     RCC_AHBENR_IOPn( CAT( 0x, h) - 0xA)
 
@@ -54,6 +55,13 @@
 #define RCC_CR2                 RCC[ 13]
 #define RCC_CR2_HSI14ON         0x00000001  /*  1: HSI14 clock enable */
 #define RCC_CR2_HSI14RDY        0x00000002  /*  2: HSI14 clock ready */
+
+
+#define CRC             ((volatile unsigned *) 0x40023000)
+#define CRC_DR          CRC[ 0]
+#define CRC_IDR         CRC[ 1]
+#define CRC_CR          CRC[ 2]
+#define CRC_INIT        CRC[ 4]
 
 
 #define GPIOA                   ((volatile long *) 0x48000000)
@@ -108,7 +116,8 @@
 
 /** SYSTEM MEMORY *************************************************************/
 /* STM32F030 calibration addresses (at 3.3V and 30C) */
-#define TS_CAL                  ((unsigned short *) 0x1FFFF7B8)
-#define VREFINT_CAL             ((unsigned short *) 0x1FFFF7BA)
+#define TS_CAL                  ((const unsigned short *) 0x1FFFF7B8)
+#define VREFINT_CAL             ((const unsigned short *) 0x1FFFF7BA)
+#define TS_CAL2                 ((const unsigned short *) 0x1FFFF7C2)
 
 /* end of stm32f030xx.h */
