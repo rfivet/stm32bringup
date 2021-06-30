@@ -1,5 +1,5 @@
 /* adcmain.c -- ADC reading of reference voltage and temperature sensor */
-/* Copyright (c) 2020 Renaud Fivet */
+/* Copyright (c) 2020-2021 Renaud Fivet */
 
 #include <stdio.h>
 #include "system.h"
@@ -26,8 +26,9 @@ int main( void) {
 #ifdef RAW
             adc_vnt( VNT_RAW, &Vsample, &Csample) ;
             printf( "%i, %i, %i, %i, ", calV, Vsample, calC, Csample) ;
+			Csample = 300 + (calC - (int) Csample * calV / Vsample)
+																* 10000 / 5336 ;
             Vsample = 330 * calV / Vsample ;
-            Csample = 850 + (1500 - (int) Csample) * 10 / 4 ;
 #else
             adc_vnt( VNT_VNC, &Vsample, &Csample) ;
 #endif

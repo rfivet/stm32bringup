@@ -1,5 +1,5 @@
 /* adc.c -- system layer
-** Copyright (c) 2020 Renaud Fivet
+** Copyright (c) 2020-2021 Renaud Fivet
 **
 ** ADC for temperature sensor and Vrefint
 ** gpioa low level API and usleep()
@@ -118,7 +118,7 @@
 
 /** SYSTEM MEMORY *************************************************************/
 /* STM32F030 calibration addresses (at 3.3V and 30C) */
-#define TS_CAL                  ((unsigned short *) 0x1FFFF7B8)
+#define TS_CAL1                 ((unsigned short *) 0x1FFFF7B8)
 #define VREFINT_CAL             ((unsigned short *) 0x1FFFF7BA)
 
 
@@ -298,7 +298,7 @@ void adc_vnt( vnt_cmd_t cmd, short *ptrV, short *ptrC) {
     if( cmd <= VNT_CAL) {
     /* Calibration Values */
         *ptrV = *VREFINT_CAL ;
-        *ptrC = *TS_CAL ;
+        *ptrC = *TS_CAL1 ;
         return ;
     }
 
@@ -307,8 +307,8 @@ void adc_vnt( vnt_cmd_t cmd, short *ptrV, short *ptrC) {
     *ptrV = adc_convert() ;
     
     if( cmd == VNT_VNC) {
+		*ptrC = 300 + (*TS_CAL1 - *ptrC * *VREFINT_CAL / *ptrV) * 10000 / 5336 ;
         *ptrV = 330 * *VREFINT_CAL / *ptrV ;
-        *ptrC = 850 + (1500 - *ptrC) * 10 / 4 ;
     }
 }
 
