@@ -195,7 +195,7 @@ SECTIONS
 		*(.stack*)
 	} > RAM
 
-	.crc : AT (__etext + (__data_end__ - __data_start__))
+	.crc __etext + SIZEOF(.data) :
 	{
 		KEEP(*(.crc_chk))
 	} > FLASH
