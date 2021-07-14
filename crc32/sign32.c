@@ -7,7 +7,7 @@
 
 /*
 **  POLY32 is 0x04C11DB7
-**  Intialisation 0xFFFFFFFF
+**  Initialisation 0xFFFFFFFF
 **  High bit first (left shift)
 **  32 bit word input, little endian
 **  crc = CRC32( crc, word)
@@ -162,7 +162,9 @@ static uint32_t check_word( uint32_t crc, unsigned char buf[ 4]) {
 }
 
 
-int sign_file( char *filename) {
+static const unsigned mark = 0xDEC0ADDE ;	/* DEADC0DE placeholder value */
+
+static int sign_file( char *filename) {
     FILE *fin, *fout ;
     int cnt, filesize, outsize ;
     uint32_t crc ;
@@ -186,8 +188,15 @@ int sign_file( char *filename) {
     filesize = 0 ;
     while( !feof( fin)) {
         cnt = fread( buf, 1, sizeof buf, fin) ;
-        if( *((unsigned *) buf) == 0xDEC0ADDE)      /* DEADC0DE Placeholder */
-            break ;
+        while( cnt == 4 && *((unsigned *) buf) == mark) {
+		/* DEADC0DE placeholder at EOF */
+	        cnt = fread( buf, 1, sizeof buf, fin) ;
+			if( cnt != 0) {
+				filesize += 4 ;
+		        crc = check_word( crc, (unsigned char *) &mark) ;
+		        fwrite( &mark, 1, 4, fout) ;
+			}
+		}
 
         filesize += cnt ;
         if( cnt != 4) {
