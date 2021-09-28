@@ -7,7 +7,8 @@ ifeq (linux, $(findstring linux, $(MAKE_HOST)))
  INSTALLDIR = $(HOME)/Packages
 #REVDIR = gcc-arm-none-eabi-9-2019-q4-major
 #REVDIR = gcc-arm-none-eabi-9-2020-q2-update
- REVDIR = gcc-arm-none-eabi-10-2020-q4-major
+#REVDIR = gcc-arm-none-eabi-10-2020-q4-major
+ REVDIR = gcc-arm-none-eabi-10.3-2021.07
 else
  DRIVE = d
 ifeq (cygwin, $(findstring cygwin, $(MAKE_HOST)))
@@ -24,7 +25,8 @@ endif
 #REVDIR = GNU Tools ARM Embedded/7 2018-q2-update
 #REVDIR = GNU Tools ARM Embedded/9 2019-q4-major
 #REVDIR = GNU Arm Embedded Toolchain/9 2020-q2-update
- REVDIR = GNU Arm Embedded Toolchain/10 2020-q4-major
+#REVDIR = GNU Arm Embedded Toolchain/10 2020-q4-major
+ REVDIR = GNU Arm Embedded Toolchain/10 2021.07
 endif
 
 GCCDIR = $(INSTALLDIR)/$(REVDIR)
@@ -106,9 +108,9 @@ CRC32SIGN := 1
 #SRCS = startup.ram.c txeie.c uptime.1.c
  SRCS = startup.crc.c txeie.c uptime.1.c
 OBJS = $(SRCS:.c=.o)
-LIBOBJS = printf.o putchar.o puts.o memset.o memcpy.o
+LIBOBJS = printf.o putchar.o puts.o # memset.o memcpy.o
 
-CPU = -mthumb -mcpu=cortex-m0
+CPU = -mthumb -mcpu=cortex-m0 --specs=nano.specs
 ifdef RAMISRV
  CDEFINES = -DRAMISRV=$(RAMISRV)
 endif
@@ -153,7 +155,7 @@ cstartup.elf: cstartup.o
 %.elf:
 	@echo $@
 	$(CC) $(CPU) -T$(LD_SCRIPT) $(LDFLAGS) -nostartfiles -o $@ $+
-	$(SIZE) -G $@
+	$(SIZE) $@
 	$(OBJDUMP) -hS $@ > $(subst .elf,.lst,$@)
 
 %.bin: %.elf
@@ -169,7 +171,7 @@ ifdef CRC32SIGN
 
 %.hex: %.$(BINLOC).bin
 	@echo $@
-	$(OBJCOPY) --change-address=$(BINLOC) -I binary -O ihex $< $@ 
+	$(OBJCOPY) --change-address=$(BINLOC) -I binary -O ihex $< $@
 endif
 
 %.hex: %.elf
