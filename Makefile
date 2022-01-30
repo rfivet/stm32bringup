@@ -1,5 +1,5 @@
 # Makefile -- stm32bringup
-# Copyright (c) 2020-2021 Renaud Fivet
+# Copyright (c) 2020-2022 Renaud Fivet
 
 ### Build environment selection
 
@@ -26,7 +26,8 @@ endif
 #REVDIR = GNU Tools ARM Embedded/9 2019-q4-major
 #REVDIR = GNU Arm Embedded Toolchain/9 2020-q2-update
 #REVDIR = GNU Arm Embedded Toolchain/10 2020-q4-major
- REVDIR = GNU Arm Embedded Toolchain/10 2021.07
+#REVDIR = GNU Arm Embedded Toolchain/10 2021.07
+ REVDIR = GNU Arm Embedded Toolchain/10 2021.10
 endif
 
 GCCDIR = $(INSTALLDIR)/$(REVDIR)
@@ -180,3 +181,8 @@ endif
 
 libstm32.a: $(LIBOBJS)
 	$(AR) rc $@ $?
+
+depend.mak: $(SRCS) $(LIBOBJS:.o=.c)
+	$(CC) ${CDEFINES} -MM $+ > depend.mak
+
+include depend.mak
