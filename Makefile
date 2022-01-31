@@ -8,7 +8,8 @@ ifeq (linux, $(findstring linux, $(MAKE_HOST)))
 #REVDIR = gcc-arm-none-eabi-9-2019-q4-major
 #REVDIR = gcc-arm-none-eabi-9-2020-q2-update
 #REVDIR = gcc-arm-none-eabi-10-2020-q4-major
- REVDIR = gcc-arm-none-eabi-10.3-2021.07
+#REVDIR = gcc-arm-none-eabi-10.3-2021.07
+ REVDIR = gcc-arm-none-eabi-10.3-2021.10
 else
  DRIVE = d
 ifeq (cygwin, $(findstring cygwin, $(MAKE_HOST)))
