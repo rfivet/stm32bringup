@@ -109,8 +109,8 @@ CRC32SIGN := 1
 #SRCS = startup.txeie.c adc.c adccalib.c ds18b20.c
 #SRCS = startup.ram.c txeie.c uptime.1.c
  SRCS = startup.crc.c txeie.c uptime.1.c
-OBJS = $(SRCS:.c=.o)
-LIBOBJS = printf.o putchar.o puts.o # memset.o memcpy.o
+LIBSRCS = printf.c putchar.c puts.c # memset.c memcpy.c
+ALLSRCS = $(SRCS) $(LIBSRCS)
 
 CPU = -mthumb -mcpu=cortex-m0 --specs=nano.specs
 ifdef RAMISRV
@@ -145,9 +145,9 @@ version:
 
 clean:
 	@echo CLEAN
-	@rm -f *.o *.elf *.map *.lst *.bin *.hex *.a
+	@rm -f *.dep *.o *.elf *.map *.lst *.bin *.hex *.a
 
-$(PROJECT).elf: $(OBJS) libstm32.a
+$(PROJECT).elf: $(SRCS:.c=.o) libstm32.a
 boot.elf: boot.o
 ledon.elf: ledon.o
 blink.elf: blink.o
@@ -180,10 +180,13 @@ endif
 	@echo $@
 	$(OBJCOPY) -O ihex $< $@
 
-libstm32.a: $(LIBOBJS)
+libstm32.a: $(LIBSRCS:.c=.o)
 	$(AR) rc $@ $?
 
-depend.mak: $(SRCS) $(LIBOBJS:.o=.c)
-	$(CC) ${CDEFINES} -MM $+ > depend.mak
+%.dep: %.c
+	@echo $@
+	$(CC) $(CDEFINES) -MM $< > $@
 
-include depend.mak
+ifneq ($(MAKECMDGOALS),clean)
+include $(ALLSRCS:.c=.dep)
+endif
