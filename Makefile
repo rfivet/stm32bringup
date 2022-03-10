@@ -1,5 +1,5 @@
 # Makefile -- stm32bringup
-# Copyright (c) 2020-2022 Renaud Fivet
+# Copyright © 2020-2022 Renaud Fivet
 
 ### Build environment selection
 
@@ -9,7 +9,8 @@ ifeq (linux, $(findstring linux, $(MAKE_HOST)))
 #REVDIR = gcc-arm-none-eabi-9-2020-q2-update
 #REVDIR = gcc-arm-none-eabi-10-2020-q4-major
 #REVDIR = gcc-arm-none-eabi-10.3-2021.07
- REVDIR = gcc-arm-none-eabi-10.3-2021.10
+#REVDIR = gcc-arm-none-eabi-10.3-2021.10
+ REVDIR = gcc-arm-11.2-2022.02-x86_64-arm-none-eabi
 else
  DRIVE = d
 ifeq (cygwin, $(findstring cygwin, $(MAKE_HOST)))
@@ -28,7 +29,8 @@ endif
 #REVDIR = GNU Arm Embedded Toolchain/9 2020-q2-update
 #REVDIR = GNU Arm Embedded Toolchain/10 2020-q4-major
 #REVDIR = GNU Arm Embedded Toolchain/10 2021.07
- REVDIR = GNU Arm Embedded Toolchain/10 2021.10
+#REVDIR = GNU Arm Embedded Toolchain/10 2021.10
+ REVDIR = GNU Arm Embedded Toolchain/gcc-arm-11.2-2022.02-mingw-w64-i686-arm-none-eabi
 endif
 
 GCCDIR = $(INSTALLDIR)/$(REVDIR)
