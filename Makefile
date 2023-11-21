@@ -13,7 +13,8 @@ ifeq (linux, $(findstring linux, $(MAKE_HOST)))
 #REVDIR = gcc-arm-11.2-2022.02-x86_64-arm-none-eabi
 #REVDIR = arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi
 #REVDIR = arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi
- REVDIR = arm-gnu-toolchain-12.2.mpacbti-rel1-x86_64-arm-none-eabi
+#REVDIR = arm-gnu-toolchain-12.2.mpacbti-rel1-x86_64-arm-none-eabi
+ REVDIR = arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi
 else
  DRIVE = d
 ifeq (cygwin, $(findstring cygwin, $(MAKE_HOST)))
@@ -36,7 +37,8 @@ endif
 #REVDIR = GNU Arm Embedded Toolchain/gcc-arm-11.2-2022.02-mingw-w64-i686-arm-none-eabi
 #REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-11.3.rel1-mingw-w64-i686-arm-none-eabi
 #REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-12.2.rel1-mingw-w64-i686-arm-none-eabi
- REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-12.2.mpacbti-rel1-mingw-w64-i686-arm-none-eabi
+#REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-12.2.mpacbti-rel1-mingw-w64-i686-arm-none-eabi
+ REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi
 endif
 
 GCCDIR = $(INSTALLDIR)/$(REVDIR)
