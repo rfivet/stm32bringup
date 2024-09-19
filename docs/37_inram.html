@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <title>3.7 In RAM Execution</title>
+    <link type="text/css" rel="stylesheet" href="style.css">
+ </head>
+ <body>
+<h1>3.7 In RAM Execution</h1>
+<h2>Selecting which memory is mapped at address 0x0</h2>
+So far, I have been executing either my own code from flash or the
+bootloader from system memory depending of the state of the BOOT0 pin at
+reset.
+<p>
+Using stm32flash I can request the bootloader to transfer execution to
+the code in flash memory.
+
+<pre>stm32flash -g 0 COM6</pre>
+
+With my current code, this works fine as far as I don’t use interrupt
+subroutine. <b>ledon</b> and <b>blink</b> both work, but <b>ledtick</b> will
+reset once the <code>SysTick_Handler()</code> interrupt routine is triggered
+for the first time. This is due to the fact that the system memory is still
+mapped at address 0x0 where my interrupt subroutine vector should be. To
+fix this, I need to insure the flash is mapped at address 0x0 before I
+enable interrupts.
+<p>
+The memory mapping is managed through the System Configuration
+controller <b>SYSCFG</b>, so I need to activate it and reconfigure the mapping
+before my <b>SysTick</b> initialization code in <code>init()</code>.
+
+<pre>
+/* Make sure FLASH Memory is mapped at 0x0 before enabling interrupts */
+    RCC_APB2ENR |= RCC_APB2ENR_SYSCFGEN ;      /* Enable SYSCFG */
+    SYSCFG_CFGR1 &= ~3 ;                       /* Map FLASH at 0x0 */
+</pre>
+
+and add the SYSCFG peripheral description.
+
+<pre>
+#define RCC_APB2ENR_SYSCFGEN    0x00000001  /*  1: SYSCFG clock enable */
+
+#define SYSCFG              ((volatile long *) 0x40010000)
+#define SYSCFG_CFGR1        SYSCFG[ 0]
+</pre>
+
+With this in place, I can now switch easily from bootloader to flash
+code by sending a go command via stm32flash.
+
+<h2>Sharing the RAM with the Bootloader</h2>
+
+Before I can ask the bootloader to transfer execution to code in RAM, I
+need first to ask it to write code there. As the bootloader data are
+located in RAM too, I have to avoid overwriting them. Where is it safe
+to write in RAM?
+<p>
+The answer is in the application note <b>AN2606 <i>STM32 microcontroller
+system memory boot mode</i></b>. Section 5 covers <b>STM32F03xx4/6 devices
+bootloader</b> and it states in <b>5.1 Bootloader Configuration</b>:
+<blockquote>2 Kbyte starting from address 0x20000000 are used by the bootloader
+firmware.</blockquote>
+<p>
+I am using a STM32F030F4P6, which has 4KB RAM and the bootloader
+firmware is using the first 2KB. That means I have only 2KB left to use
+starting from address 0x20000800.
+<p>
+Actually, I have only 2KB left to use until the bootloader firmware
+transfer execution to my code in RAM. Once my code executes, I can
+reclaim the first 2KB. This is exactly what I have to tell the linker.
+<p>
+I just create a new linker script <b>f030f4.ram.ld</b> by copying
+<b>f030f4.ld</b> and changing the memory configuration.
+
+<pre>
+/* FLASH means code, read only data and data initialization */
+    FLASH (rx)  : ORIGIN = 0x20000800, LENGTH =  2K
+    RAM   (rwx) : ORIGIN = 0x20000000, LENGTH =  2K
+</pre>
+
+I can build <b>ledon</b> or <b>blink</b> with that new linker script and check
+the resulting <b>f030f4.map</b> file.
+<ul>
+<li> isr vector, code, const data and data initialization are located from
+  0x20000800.
+
+<li> Stack Pointer initial value is 0x20000800.
+
+<li> .data and .bss are located from 0x20000000.
+</ul>
+Let’s write this code in RAM and execute it!
+
+<pre>
+stm32flash -w blink.bin -S 0x20000800 COM6
+stm32flash -g 0x20000800 COM6
+</pre>
+
+This work just fine but of course the executable of <b>ledon</b> or
+<b>blink</b> doesn’t use interrupt routines.
+
+<h2>ISR Vector in RAM</h2>
+
+Like for FLASH, we need to make sure that RAM memory is mapped at
+address 0x0 and start with the ISR vector.
+<ul>
+<li> Use <b>SYSCFG</b> controller to map RAM at address 0x0
+
+<li> Tell the linker to reserve space at beginning of RAM before locating
+  <b>.data</b> section.
+
+<li> Make a copy of <code>isr_vector[]</code> to the beginning of RAM in the
+space reserved by the linker.
+</ul>
+To select the RAM mapping, the <b>MEM_MODE</b> bits need to be set in
+<b>SYSCFG_CFGR1</b>.
+
+<pre>
+/* Make sure SRAM Memory is mapped at 0x0 before enabling interrupts */
+    RCC_APB2ENR |= RCC_APB2ENR_SYSCFGEN ;        /* Enable SYSCFG */
+    SYSCFG_CFGR1 |= 3 ;                          /* Map RAM at 0x0 */
+</pre>
+
+The ISR vector will have at most 16 + 32 entries for STM32F030xx, that
+means 192 bytes need to be reserved. I add a new section before <b>.data</b> in
+the link script.
+
+<pre>
+    .isrdata :
+    {
+        ram_vector = . ;
+        . = . + 192 ;
+    } > RAM
+
+    .data : AT (__etext)
+    {
+...
+</pre>
+
+In the startup code, I add the code to copy the <code>isr_vector[]</code> to
+the location reserved at the beginning of RAM.
+
+<pre>
+#define ISRV_SIZE (sizeof isr_vector / sizeof *isr_vector)
+
+extern isr_p ram_vector[] ;
+
+/* Copy isr vector to beginning of RAM */
+    for( unsigned i = 0 ; i < ISRV_SIZE ; i++)
+        ram_vector[ i] = isr_vector[ i] ;
+</pre>
+
+RAM initialization now consists of
+<ul>
+<li> Stack pointer initialization
+
+<li> ISR vector copy
+
+<li> .data initialization
+
+<li> .bss clearing
+</ul>
+I can now rebuild <b>ledtick</b> or <b>uptime prototype</b> for execution in
+RAM.&nbsp; <b>f030f4.map</b> now shows that .data starts at 0x200000C0, after
+<code>ram_vector[]</code>.
+
+<pre>
+.isrdata        0x20000000       0xc0
+                0x20000000                ram_vector = .
+                0x200000c0                . = (. + 0xc0)
+ *fill*         0x20000000       0xc0
+
+.data           0x200000c0        0x0 load address 0x20000c88
+                0x200000c0                __data_start__ = .
+</pre>
+
+I can now use <b>stm32flash</b> to write those executables in RAM and request
+execution.
+
+<h2>Memory Models</h2>
+
+I have now the choice between four memory models when I build.
+<pre>
+| Model   | ISRV Location      | Load address (word aligned)             |
+|---------|--------------------|-----------------------------------------|
+|BOOTFLASH| Beginning of FLASH | Beginning of FLASH                      |
+| BOOTRAM | Beginning of RAM   | Beginning of RAM                        |
+| GOFLASH | Beginning of RAM   | In FLASH                                |
+| GORAM   | Beginning of RAM   | In RAM, after bootloader reserved space |
+</pre>
+<ul>
+<li> <b>BOOTFLASH</b>: Executed at reset depending of BOOT0 pin level otherwise
+  triggered by a (boot)loader.
+
+<li> <b>BOOTRAM</b>: Executed at reset depending of BOOT0/BOOT1 configuration
+  otherwise triggered by a (boot)loader through SWD.
+
+<li> <b>GOFLASH</b>: Executed at reset if located at beginning of FLASH
+  otherwise triggered by a (boot)loader. (Spoiler: IAP and multi boot)
+
+<li> <b>GORAM</b>: Triggered by a (boot)loader. Useful for development if RAM
+  size allows it. (Spoiler: external storage)
+</ul>
+To avoid having to edit multiple files when switching between models or
+introducing a new chipset family, I make the following changes.
+<ol>
+<li> Use a generic linker script.
+
+<li> Let the startup code handle the isr vector initialization and the
+   memory mapping.
+
+<li> Maintain the FLASH and RAM information and isr vector position in the
+   Makefile.
+</ol>
+<h3>1. Generic Linker Script</h3>
+
+To turn f030f4.ram.ld into a generic linker script, I need to
+<ul>
+<li> abstract the memory part.
+
+<li> remove the RAM isr vector hardcoded size.
+</ul>
+<pre>
+MEMORY
+{
+/* FLASH means code, read only data and data initialization */
+    FLASH (rx) : ORIGIN = DEFINED(FLASHSTART) ? FLASHSTART : 0x08000000,
+        LENGTH =  DEFINED(FLASHSIZE) ? FLASHSIZE : 16K
+    RAM  (rwx) : ORIGIN = DEFINED(RAMSTART) ? RAMSTART : 0x20000000,
+        LENGTH =  DEFINED(RAMSIZE) ? RAMSIZE : 4K
+}
+</pre>
+
+The Makefile will provide the necessary addresses and sizes information
+by passing parameters to the linker: <code>FLASHSTART</code>,
+<code>FLASHSIZE</code>, <code>RAMSTART</code>, <code>RAMSIZE</code>.
+
+<pre>
+    /* In RAM isr vector reserved space at beginning of RAM */
+    .isrdata (NOLOAD):
+    {
+        KEEP(*(.ram_vector))
+    } > RAM
+</pre>
+
+The startup code will allocate <code>ram_vector[]</code> in <b>.ram_vector</b>
+section if needed.
+
+<h3>2. Startup Code</h3>
+
+I create the startup code startup.ram.c from a copy of startup.txeie.c,
+using conditional compiled code selected by RAMISRV whose definition
+will be passed as parameter to the compiler.
+
+<pre>
+#if RAMISRV == 2
+# define ISRV_SIZE (sizeof isr_vector / sizeof *isr_vector)
+isr_p ram_vector[ ISRV_SIZE] __attribute__((section(".ram_vector"))) ;
+#endif
+
+int main( void) ;
+
+void Reset_Handler( void) {
+    const long  *f ;    /* from, source constant data from FLASH */
+    long    *t ;        /* to, destination in RAM */
+
+#if RAMISRV == 2
+/* Copy isr vector to beginning of RAM */
+    for( unsigned i = 0 ; i < ISRV_SIZE ; i++)
+        ram_vector[ i] = isr_vector[ i] ;
+#endif
+
+/* Assume:
+**  __bss_start__ == __data_end__
+**  All sections are 4 bytes aligned
+*/
+    f = __etext ;
+    for( t = __data_start__ ; t < __bss_start__ ; t += 1)
+        *t = *f++ ;
+
+    while( t < &__bss_end__)
+        *t++ = 0 ;
+
+/* Make sure active isr vector is mapped at 0x0 before enabling interrupts */
+    RCC_APB2ENR |= RCC_APB2ENR_SYSCFGEN ;           /* Enable SYSCFG */
+#if RAMISRV
+    SYSCFG_CFGR1 |= 3 ;                             /* Map RAM at 0x0 */
+#else
+    SYSCFG_CFGR1 &= ~3 ;                            /* Map FLASH at 0x0 */
+#endif
+
+    if( init() == 0)
+        main() ;
+
+    for( ;;)
+        __asm( "WFI") ; /* Wait for interrupt */
+}
+</pre>
+
+The SYSCFG controller definition is now included through a chipset
+specific header file. This way I can maintain all the chipset
+controllers and peripherals in one place.
+
+<pre>#include "stm32f030xx.h"</pre>
+
+<h3> 3. Makefile</h3>
+
+The Makefile now holds the memory model definition that is passed as
+parameters to the compiler and the linker.
+
+<pre>
+### Memory Models
+# By default we use the memory mapping from linker script
+
+# In RAM Execution, load and start by USART bootloader
+# Bootloader uses first 2K of RAM, execution from bootloader
+#FLASHSTART = 0x20000800
+#FLASHSIZE  = 2K
+#RAMSTART   = 0x20000000
+#RAMSIZE    = 2K
+
+# In RAM Execution, load and start via SWD
+# 4K RAM available, execution via SWD
+#FLASHSTART = 0x20000000
+#FLASHSIZE  = 3K
+#RAMSTART   = 0x20000C00
+#RAMSIZE    = 1K
+
+# In Flash Execution
+# if FLASHSTART is not at beginning of FLASH: execution via bootloader or SWD
+#FLASHSTART = 0x08000000
+#FLASHSIZE  = 16K
+#RAMSTART   = 0x20000000
+#RAMSIZE    = 4K
+
+# ISR vector copied and mapped to RAM when FLASHSTART != 0x08000000
+ifdef FLASHSTART
+ ifneq ($(FLASHSTART),0x08000000)
+  ifeq ($(FLASHSTART),0x20000000)
+   # Map isr vector in RAM
+   RAMISRV := 1
+  else
+   # Copy and map isr vector in RAM
+   RAMISRV := 2
+  endif
+ endif
+ BINLOC  = $(FLASHSTART)
+else
+ BINLOC  = 0x08000000
+endif
+</pre>
+
+Compiler and linker have different syntax for defining symbols through
+command line parameters.
+
+<pre>
+CPU = -mthumb -mcpu=cortex-m0 --specs=nano.specs
+ifdef RAMISRV
+ CDEFINES = -DRAMISRV=$(RAMISRV)
+endif
+WARNINGS=-pedantic -Wall -Wextra -Wstrict-prototypes
+CFLAGS = $(CPU) -g $(WARNINGS) -Os $(CDEFINES)
+
+LD_SCRIPT = generic.ld
+ifdef FLASHSTART
+ LDOPTS  =--defsym FLASHSTART=$(FLASHSTART) --defsym FLASHSIZE=$(FLASHSIZE)
+ LDOPTS +=--defsym RAMSTART=$(RAMSTART) --defsym RAMSIZE=$(RAMSIZE)
+endif
+LDOPTS +=-Map=$(subst .elf,.map,$@) -cref --print-memory-usage
+comma :=,
+space :=$() # one space before the comment
+LDFLAGS =-Wl,$(subst $(space),$(comma),$(LDOPTS))
+</pre>
+
+As I am revising the compilation flags, I have increased the level of
+warnings by adding -pedantic, -Wstrict-prototypes.
+<p>
+Build rules updated with new symbols for the linker.
+
+<pre>
+$(PROJECT).elf: $(OBJS) libstm32.a
+boot.elf: boot.o
+ledon.elf: ledon.o
+blink.elf: blink.o
+ledtick.elf: ledtick.o
+cstartup.elf: cstartup.o
+
+%.elf:
+    @echo $@
+    $(CC) $(CPU) -T$(LD_SCRIPT) $(LDFLAGS) -nostartfiles -o $@ $+
+    $(SIZE) $@
+    $(OBJDUMP) -hS $@ > $(subst .elf,.lst,$@)
+</pre>
+
+The projects composition need to be updated to use the new startup.
+
+<pre>SRCS = startup.ram.c txeie.c uptime.1.c</pre>
+
+Finally, to keep track of the memory model and the load location, I put
+the load address in the name of the binary file generated.
+
+<pre>all: $(PROJECT).$(BINLOC).bin $(PROJECT).hex</pre>
+
+This way if I build uptime prototype in GORAM memory model
+
+<pre>
+$ make
+f030f4.elf
+   text    data     bss     dec     hex filename
+   1164       0      20    1184     4a0 f030f4.elf
+f030f4.hex
+f030f4.0x20000800.bin
+</pre>
+
+The name of the file will remind me where to load the code.
+
+<pre>
+$ stm32flash -w f030f4.0x20000800.bin -S 0x20000800 COM6
+$ stm32flash -g 0x20000800
+</pre>
+
+<h2>Caveat: stm32flash v0.6 intel hex bug</h2>
+
+At the time of writing, <b>stm32flash</b> v0.6 has a bug that prevents
+writing intel hex files correctly at address other than the origin of
+the Flash. A bug fix and the possibility to directly read the base
+address from the intel hex file are planned to be included in v0.7.
+<p>
+Until v0.7 is out, I am using my own patched version of stm32flash or
+the binary files when I need to test GOFLASH and GORAM memory models.
+<p>
+As I branched off my own patched version of <b>stm32flash</b>, I added a
+<code>-x</code> option to write and execute an intel hex file:
+
+<pre>stm32flash -x file.hex COM#</pre>
+
+<h2>Testing</h2>
+
+I build all four memory models and check that they can be loaded and
+executed using both <b>stm32flash</b> and <b>STM32 Cube Programmer</b>.
+<p>
+Using the USART bootloader, I validate BOOTFLASH, GOFLASH and GORAM with
+<b>stm32flash</b> and <b>STM32 Cube Programmer</b>.
+<p>
+Using the SWD interface, I validate BOOTFLASH, GOFLASH, BOOTRAM and
+GORAM with <b>STM32 Cube Programmer</b>.
+
+<h2>Checkpoint</h2>
+
+<a href="38_crc32.html">Next</a>, I will add integrity check at startup by
+doing CRC32 validation of the code.
+
+    <hr>© 2020-2024 Renaud Fivet
+ </body>
+</html>

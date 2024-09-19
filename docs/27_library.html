@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <title>2.7 C Library</title>
+    <link type="text/css" rel="stylesheet" href="style.css">
+ </head>
+ <body>
+<h1>2.7: C Library</h1>
+
+So far I have used three Standard C library functions for output:
+<code>printf()</code>, <code>putchar()</code> and <code>puts()</code>. It’s
+time to bundle them as a library. This will give me more flexibility as I will
+not have to give a full list of the modules to link, the linker will handle
+the missing dependencies by looking into the libraries.
+
+<h2>puts()</h2>
+
+I have already packaged <code>printf()</code> and <code>putchar()</code> in
+stand alone modules. As I have removed my previous implementation of
+<code>puts()</code> from the system, I need to create puts.c.
+
+<pre>
+/* puts.c -- write a string to stdout   */
+
+#include &lt;stdio.h>
+#include "system.h" /* kputc(), kputs() */
+
+int puts( const char *s) {
+    kputs( s) ;
+    kputc( '\n') ;
+    return 0 ;
+}
+</pre>
+
+<h2>Updating Makefile</h2>
+
+I need to tell <b>GNU make</b> how to manage and use the library, which
+means updating <b>Makefile</b>.
+<p>
+What’s the name, the content and the rule to maintain the library:
+
+<pre>
+AR      = $(BINPFX)ar
+
+LIBOBJS = printf.o putchar.o puts.o
+LIBSTEM = stm32
+
+lib$(LIBSTEM).a: $(LIBOBJS)
+    $(AR) rc $@ $?
+</pre>
+
+Where to look for and which libraries to use in the link phase:
+
+<pre>
+LIBS = -l$(LIBSTEM) -lgcc
+LIB_PATHS = -L. -L$(LIBDIR)
+
+$(PROJECT).elf: $(OBJS) lib$(LIBSTEM).a
+    @echo $@ from $(OBJS)
+    $(LD) -T$(LD_SCRIPT) $(LIB_PATHS) -Map=$(PROJECT).map -cref -o $@ $(OBJS) $(LIBS)
+    $(SIZE) $@
+    $(OBJDUMP) -hS $@ > $(PROJECT).lst
+</pre>
+
+Library modules are implicitly part of the composition, so it’s not
+necessary to list them anymore.
+
+<pre>
+#SRCS = startup.c uplow.2.c uptime.c printf.c putchar.c
+SRCS = startup.c uplow.2.c uptime.c
+</pre>
+
+I include libraries in the list of files to delete when doing a make
+clean.
+
+<pre>
+clean:
+    @echo CLEAN
+    @rm -f *.o *.elf *.map *.lst *.bin *.hex *.a
+</pre>
+
+<h2>Building uptime</h2>
+
+Build terminates successfully producing the same executable as before.
+
+<pre>
+$ make
+f030f4.elf from startup.o uplow.2.o uptime.o
+   text    data     bss     dec     hex filename
+   1797       0      12    1809     711 f030f4.elf
+f030f4.hex
+f030f4.bin
+</pre>
+
+Checking the map produced by the linker I can see that it fetched the
+necessary modules for <code>printf()</code> and <code>putchar()</code> from the
+newly created library.
+
+<pre>
+Archive member included to satisfy reference by file (symbol)
+
+.\libstm32.a(printf.o)        uptime.o (printf)
+.\libstm32.a(putchar.o)       uptime.o (putchar)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+(_thumb1_case_sqi.o)
+                              .\libstm32.a(printf.o) (__gnu_thumb1_case_sqi)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+(_udivsi3.o)
+                              uptime.o (__aeabi_uidiv)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+(_divsi3.o)
+                              uptime.o (__aeabi_idiv)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+(_dvmd_tls.o)
+                              D:/Program Files (x86)/GNU Arm Embedded Toolchain/
+arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/1
+3.3.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o) (__aeabi_idiv0)
+</pre>
+
+<h2>Building hello</h2>
+
+I can rebuild my <b>hello</b> application using the latest system
+implementation and the newly made library.
+
+<pre>SRCS = startup.c uplow.2.c hello.c</pre>
+
+Build terminates successfully, the changes in size are due to the
+difference in the system implementation.
+
+<pre>
+$ make
+f030f4.elf from startup.o uplow.2.o hello.o
+   text    data     bss     dec     hex filename
+    445       0       8     453     1c5 f030f4.elf
+f030f4.hex
+f030f4.bin
+</pre>
+
+Checking the map file produced in the link phase, I can see that only
+<b>puts.o</b> has been fetched from my local library.
+
+<pre>
+Archive member included to satisfy reference by file (symbol)
+
+.\libstm32.a(puts.o)          hello.o (puts)
+</pre>
+
+<h2>Checkpoint</h2>
+
+I had to deal with linking with <b>gcc</b> library
+<a href="25_prototype.html">before</a>, so introducing my own library
+implementation of the standard C library output functions is a simple step.
+<p>
+<a href="28_clocks.html">Next</a>, I will continue on the topic of asynchronous serial
+transmission and look into baud rate and clock configuration.
+
+    <hr>© 2020-2024 Renaud Fivet
+ </body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <title>3.9 Reading a Resistor Value</title>
+    <link type="text/css" rel="stylesheet" href="style.css">
+ </head>
+ <body>
+<h1>3.9 Reading a Resistor Value</h1>
+
+I used the ADC previously to read the internal sensors, so it’s simple
+to move on to external ones. Once you can read the value of a resistor,
+there is a wide choice of analog applications: thermistors, photocells,
+potentiometers, sliders, joysticks …
+
+<h2>Voltage Divider Circuit</h2>
+
+<img alt="Voltage Divider Circuit" src="img/39_vdivider.png">
+<p>
+<b>Vout = Vin * Rref / (Rref + Rmeasured)</b>
+
+<h2>ADC Readings</h2>
+
+Assuming the ADC is configured for 12 bit precision and return a value
+in the range [0 … 4095]
+<p>
+<b>Vout = VADC = VDDA * ADCRAW / 4095</b>
+<p>
+<b>Vin = VDDA</b>
+<p>
+<b>~VDDA~ * ADCRAW / 4095 = ~VDDA~ * Rref / (Rref + Rmeasured)</b>
+<p>
+<b>ADCRAW * Rmeasured = Rref * (4095 – ADCRAW)</b>
+<p>
+<b>Rmeasured = Rref * (4095 – ADCRAW) / ADCRAW</b>
+<p>
+<b>Rmeasured = Rref * (4095 / ADCRAW – 1)</b>
+
+<h2>Devil in the whatnots</h2>
+<ul>
+<li> Avoiding division by zero.
+
+<li> Integer versus floating point calculation.
+
+<li> Choosing the reference resistor.
+
+<li> Calibration of the reference resistor.
+</ul>
+<pre>
+#include &lt;limits.h>
+int R = ADCraw ? Rref * (4095 / ADCraw - 1) : INT_MAX ;
+</pre>
+
+<pre>int R = ADCraw ? Rref * 4095 / ADCraw - Rref : INT_MAX ;</pre>
+
+    <hr>© 2020-2024 Renaud Fivet
+ </body>
+</html>

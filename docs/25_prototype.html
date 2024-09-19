@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <title>2.5 uptime prototype</title>
+    <link type="text/css" rel="stylesheet" href="style.css">
+ </head>
+ <body>
+<h1>2.5 uptime prototype</h1>
+
+With the basic functionality available so far, I can write something in
+the vein of the Unix <code>uptime</code> command.
+
+<pre>
+$ man -k uptime
+uptime (1)           - Tell how long the system has been running.
+</pre>
+
+I am going to make a quick prototype first to validate the concept.
+
+<h2>Implementation</h2>
+
+I already have a one second based System Tick interrupt routine, so I
+just need to make sure it updates a count of seconds. I make a copy of
+<b>usart1tx.c</b> as <b>uplow.1.c</b> to make the changes. I use a number
+suffix for the filename when I anticipate making several revisions.
+
+<pre>
+volatile unsigned uptime ;  /* seconds elapsed since boot */
+
+#ifdef LED_ON
+static void userLEDtoggle( void) {
+    GPIO( LED_IOP)[ ODR] ^= 1 << LED_PIN ;   /* Toggle User LED */
+}
+#endif
+
+void SysTick_Handler( void) {
+    uptime += 1 ;
+#ifdef LED_ON
+    userLEDtoggle() ;
+#endif
+}
+</pre>
+
+The global variable <code>uptime</code> is marked <code>volatile</code>, the
+compiler needs this information to avoid optimization as the value changes
+concurrently when an interrupt is triggered.
+<p>
+I move the user LED toggling code to a dedicated local function
+<code>userLEDtoggle()</code> as this is not the only task of
+<code>SysTick_Handler()</code> anymore and a call to toggle the LED is needed
+during initialization. I adjust the initialization code accordingly.
+<p>
+I write a first <b>uptime.1.c</b> to print the count of seconds every time
+the <code>uptime</code> counter value changes.
+
+<pre>
+/* uptime.1.c -- tells how long the system has been running */
+#include &lt;stdio.h>
+
+extern volatile unsigned uptime ;
+extern void kputc( unsigned char c) ;
+
+void kputu( unsigned u) {
+    unsigned r = u % 10 ;
+    u /= 10 ;
+    if( u)
+        kputu( u) ;
+
+    kputc( '0' + r) ;
+}
+
+int main( void) {
+    static unsigned last ;
+
+    for( ;;)
+        if( last != uptime) {
+            last = uptime ;
+            kputu( last) ;
+            puts( " sec") ;
+        } else
+            __asm( "WFI") ; /* Wait for System Tick Interrupt */
+}
+</pre>
+
+As before for <code>kputc()</code>, the implementation of <code>kputu()</code>
+to print an unsigned integer in decimal format is not optimal but still
+functional.
+
+<h2>Build</h2>
+
+I update <b>Makefile</b> with the composition.
+
+<pre>SRCS = startup.c uplow.1.c uptime.1.c</pre>
+
+Unfortunately, when I try to build an executable, the link phase fails.
+
+<pre>
+$ make
+f030f4.elf
+D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-13.3.rel1-mi
+ngw-w64-i686-arm-none-eabi\bin\arm-none-eabi-ld.exe: uptime.1.o: in function `kp
+utu':
+D:\Projects\stm32bringup\docs/uptime.1.c:13:(.text+0x6): undefined reference to 
+`__aeabi_uidivmod'
+D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-13.3.rel1-mi
+ngw-w64-i686-arm-none-eabi\bin\arm-none-eabi-ld.exe: D:\Projects\stm32bringup\do
+cs/uptime.1.c:14:(.text+0x14): undefined reference to `__aeabi_uidiv'
+make: *** [Makefile:45: f030f4.elf] Error 1
+</pre>
+
+The compiler has generated code that references two functions
+<code>__aeabi_uidivmod</code> and <code>__aeabi_uidiv</code> when compiling
+the lines 13 and 14 of <b>uptime.1.c</b>.
+
+<pre>
+    unsigned r = u % 10 ;
+    u /= 10 ;
+</pre>
+
+This happens because the compiler generates code for Cortex-M0 which has
+no integer division support. So integer division needs to be implemented
+by code as it is not supported by hardware.
+
+I need to pass the linker a reference to GNU Arm Embedded Toolchain
+library for Cortex-M0. The library file is <b>libggc.a</b>, the option -l and
+-L of the linker tell what the library name is (-lgcc => libgcc.a) and
+where to look for it.
+
+<pre>
+LIBDIR  = $(GCCDIR)/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp
+LIB_PATHS = -L$(LIBDIR)
+LIBS = -lgcc
+
+$(PROJECT).elf: $(OBJS)
+    @echo $@
+    $(LD) -T$(LD_SCRIPT) $(LIB_PATHS) -Map=$(PROJECT).map -cref -o $@ $^ $(LIBS)
+    $(SIZE) $@
+    $(OBJDUMP) -hS $@ > $(PROJECT).lst
+</pre>
+
+Once the Makefile has been updated, the build finish successfully.
+
+<pre>
+$ make
+f030f4.elf
+   text    data     bss     dec     hex filename
+    769       0       8     777     309 f030f4.elf
+f030f4.hex
+f030f4.bin
+</pre>
+
+Checking the linker produced map file, <b>f030f4.map</b>, I can see which
+library (<b>libgcc.a</b>) but also which modules in the library (
+<b>_udivsi3.o</b> and <b>_dvmd_tls.o</b>) have been used to resolve the
+symbols (<code>__aeabi_uidiv</code> and <code>__aeabi_idiv0</code>).
+
+<pre>
+Archive member included to satisfy reference by file (symbol)
+
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+(_udivsi3.o)
+                              uptime.1.o (__aeabi_uidiv)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+(_dvmd_tls.o)
+                              D:/Program Files (x86)/GNU Arm Embedded Toolchain/
+arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/1
+3.3.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o) (__aeabi_idiv0)
+</pre>
+
+<h2>Testing</h2>
+
+I flash the board and start execution, the output works as expected, the
+first line “<b>1 sec</b>” appears one second after reset with a new line
+following every second after that.
+<p>
+<img alt="uptime v1 output" src="img/25_uptimev1.png">
+
+<h2>Library management</h2>
+
+With Cortex-M0 version of <b>libgcc.a</b> available I have some extra
+flexibility in handling usage of the library.
+<ol>
+<li> Work with a local copy of the <b>gcc</b> library.
+<ul>
+<li> copy libgcc.a locally
+<li> LIB_PATHS = -L.
+<li> LIBS = -lgcc
+</ul>
+<li> Work with a local copy of the modules extracted from the <b>gcc</b>
+library.
+<ul>
+<li> ar x libgcc.a _udivsi3.o _dvmd_tls.o
+<li> LIB_PATHS = -L.
+<li> LIBS = _udivsi3.o _dvmd_tls.o
+</ul>
+<li> Work with my own library made from the needed modules extracted from
+the <b>gcc</b> library.
+<ul>
+<li> ar x libgcc.a _udivsi3.o _dvmd_tls.o
+<li> ar qc libstm32.a _udivsi3.o _dvmd_tls.o
+<li> LIB_PATHS = -L.
+<li> LIBS = -lstm32
+</ul>
+</ol>
+The <code>ar</code> command distributed by the GNU Arm embedded toolchain is
+the same <b>GNU ar</b> as the Linux or Cygwin and MSYS2 distributions on
+Windows. So I use my native environment implementation for convenience.
+This is true for the utility commands (<code>ar</code>, <code>objcopy</code>,
+<code>objdump</code> and <code>size</code>) but not for <code>gcc</code> and
+<code>ld</code>.
+
+<h2>Checkpoint</h2>
+
+I have hacked a quick prototype of <code>uptime</code> and found an extra
+dependency to Gnu Arm Embedded Toolchain: some modules included in
+<b>libgcc.a</b> have to be included at link time as the chipset I am using has
+no support for integer division. At this stage I will reuse the library as it
+is, but I know where to look in the map file generated by the linker to find
+which modules are included. If I ever need a better control of the link phase,
+I can use <code>ar</code> to extract locally those modules from the library.
+<p>
+<a href="26_uptime.html">Next</a>, I will write <code>uptime</code> with a
+better structure.
+
+    <hr>© 2020-2024 Renaud Fivet
+ </body>
+</html>

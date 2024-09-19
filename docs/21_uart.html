@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <title>2.1 UART Validation</title>
+    <link type="text/css" rel="stylesheet" href="style.css">
+ </head>
+ <body>
+<h1>2.1 UART Validation</h1>
+
+Before I start writing some code that communicates over the Universal
+Synchronous Asynchronous Receiver Transmitter (<b>USART</b>) peripheral, I need
+to validate that I have working hardware and software tools.
+
+<h2>Board Connectivity</h2>
+
+Even if the peripheral is capable of doing synchronous communication
+(that’s the S in USART), asynchronous communication (that’s the A) which
+only needs 3 wires (GND, TX, RX, (no clock)) is usually what is needed
+in non specialized cases.
+<p>
+Boards sold online often have dedicated pre-soldered pins for UART
+connectivity similar to what I have seen before for the SWD interface.
+The VCC-GND board I used previously doesn’t have such dedicated pins but the
+functionality is wired on the pins PA9 (<b>TX</b>) and PA10 (<b>RX</b>).
+<p>
+I will use a board with dedicated pins (GND, TX, RX, VCC 3.3V). Board
+specifications can be found
+<a href="https://stm32-base.org/boards/STM32F030F4P6-STM32F030F4-V2.00">
+here</a>.
+<p>
+<img alt="STM32F030F4-V2.00" src="img/21_boardv200.png">
+
+<h2>USB to UART adapter</h2>
+
+An adapter is needed to connect to a PC. Either due to difference in
+voltage (<b>RS232</b>) or serial protocol (<b>USB</b>). Pins PA9 and PA10 are
+5V tolerant, so you could interface an Arduino Uno to a STM32 board to use
+it as a USB to serial adapter if you happen to have a spare Arduino Uno.
+<p>
+I use an adapter based on <b>Silicon Labs CP2102</b> chipset.
+Windows has USB driver available for Silicon Labs CP210x chipset family.
+The adapter enumerates as <b>COM4</b> on my Windows PC.
+<p>
+I connect the adapter to the board to provide 3.3V and make sure to cross
+RX and TX wires (STM32 RX <-> Adapter TX, STM32 TX <-> Adapter RX).
+
+<h2>STM32 Cube Programmer UART connection</h2>
+
+So far I have been using the ST-Link interface with STM32 Cube
+Programmer to flash and debug. The application also support the UART
+interface.
+
+<h2>Embedded Boot Loader</h2>
+
+A reset of the board while jumper <b>BOOT0</b> is removed will select the
+System memory instead of the flash memory for execution. This is where
+the serial flash loader protocol is implemented on chipset side.
+<p>
+<img alt="BOOT0 Jumper Selection" src="img/21_boot0.png">
+
+<h2>Testing</h2>
+
+The checklist goes like this:
+<ul>
+<li> Board connected to USB adapter
+
+<li> USB driver installed on Windows PC
+
+<li> USB adapter plugged in and enumerates as a COM port
+
+<li> STM32 Cube Programmer list the COM port in device selection menu
+
+<li> BOOT0 jumper removed and board reset to start the embedded flash
+loader.
+
+<li> Board flash memory can be erased, written or read with the programmer.
+</ul>
+<h2>Checkpoint</h2>
+
+I have now working hardware and software that communicate through the
+serial link.
+<p>
+<a href="22_board.html">Next</a>, I will make sure the code I wrote so far is
+working on the new board.
+
+    <hr>© 2020-2024 Renaud Fivet
+ </body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <title>1.2 Bootstrap</title>
+    <link type="text/css" rel="stylesheet" href="style.css">
+ </head>
+ <body>
+<h1>1.2 Bootstrap</h1>
+
+<h2>Revising the link script</h2>
+To validate the toolchain, I picked up <b>mem.ld</b>, the simplest sample link
+script, and used it as it is.
+
+<pre>
+/* Linker script to configure memory regions.
+ * Need modifying for a specific board.
+ *   FLASH.ORIGIN: starting address of flash
+ *   FLASH.LENGTH: length of flash
+ *   RAM.ORIGIN: starting address of RAM bank 0
+ *   RAM.LENGTH: length of RAM bank 0
+ */
+MEMORY
+{
+  FLASH (rx) : ORIGIN = 0x0, LENGTH = 0x20000 /* 128K */
+  RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 0x2000 /* 8K */
+}
+</pre>
+
+It needs to be modified with actual flash and ram locations and sizes.
+<p>
+Also this link script does not contain any information for the linker to know
+how to locate the output of the C compiler. Code, constant data and initial
+value of variables need to be located in flash, variables and stack need to be
+located in ram. I need a better link script that specify all of that.
+<b>nokeep.ld</b> in the sample scripts folder is the one I need.
+
+<pre>
+/* Linker script to configure memory regions.
+ * Need modifying for a specific board.
+ *   FLASH.ORIGIN: starting address of flash
+ *   FLASH.LENGTH: length of flash
+ *   RAM.ORIGIN: starting address of RAM bank 0
+ *   RAM.LENGTH: length of RAM bank 0
+ */
+MEMORY
+{
+  FLASH (rx) : ORIGIN = 0x0, LENGTH = 0x20000 /* 128K */
+  RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 0x2000 /* 8K */
+}
+
+/* Linker script to place sections and symbol values. Should be used together
+ * with other linker script that defines memory regions FLASH and RAM.
+ * It references following symbols, which must be defined in code:
+ *   Reset_Handler : Entry of reset handler
+ *
+ * It defines following symbols, which code can use without definition:
+ *   __exidx_start
+ *   __exidx_end
+...
+...
+ *   __StackTop
+ *   __stack
+ */
+ENTRY(Reset_Handler)
+
+SECTIONS
+{
+...
+...
+</pre>
+
+From this snippet I can see that not only flash and ram parameters but also
+the entry point for code execution, <b>Reset_Handler</b>, needs to be provided.
+<p>
+As a check, let’s change the link script to <b>nokeep.ld</b> in <b>Makefile</b>
+and generate an executable <b>.elf</b> from the empty source code file
+<b>empty.c</b>:
+
+<pre>
+LD_SCRIPT = $(GCCDIR)/share/gcc-arm-none-eabi/samples/ldscripts/nokeep.ld
+</pre>
+
+<pre>
+$ make empty.elf
+empty.elf
+D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-13.3.rel1-mi
+ngw-w64-i686-arm-none-eabi\bin\arm-none-eabi-ld.exe: warning: cannot find entry 
+symbol Reset_Handler; defaulting to 00000000
+rm empty.o
+</pre>
+
+The linker gives a warning and fallback on a default address as entry point.
+<p>
+So let’s create <b>boot.c</b> with an idle loop as <b>Reset_Handler</b>:
+<pre>
+void Reset_Handler( void) {
+    for( ;;) ;
+}
+</pre>
+
+In order to better understand the output of the link phase, I make the
+following changes to the <b>Makefile</b>:
+<ul>
+<li> Add debug information by passing the <b>-g</b> flag to the C compiler.
+<li> Call the linker with the flags <b>-Map=$*.map -cref</b> to produce a link
+map that also includes a cross reference table.
+<li> List the size of the sections by using the <b>size</b> command.
+<li> call <b>objdump -hS</b> to generate a disassembly listing that includes a
+list of the sections and makes use of the debug info to mix C source with
+assembly code.
+<li> Insure that the <b>clean</b> rule removes the newly generated <b>.map</b> and
+<b>.lst</b> files.
+</ul>
+
+<pre>
+OBJDUMP = $(BINPFX)objdump
+SIZE    = $(BINPFX)size
+
+CFLAGS = -g
+
+clean:
+    @echo CLEAN
+    @rm -f *.o *.elf *.map *.lst *.bin *.hex
+
+%.elf: %.o
+    @echo $@
+    $(LD) -T$(LD_SCRIPT) -Map=$*.map -cref -o $@ $<
+    $(SIZE) $@
+    $(OBJDUMP) -hS $@ > $*.lst
+</pre>
+
+<pre>
+$ make boot.elf
+boot.elf
+   text    data     bss     dec     hex filename
+     12       0       0      12       c boot.elf
+rm boot.o
+</pre>
+
+I can see that this build results in 12 bytes of code in the text section.
+More details can be found in the <b>boot.map</b> and <b>boot.lst</b> files.
+
+<h2>Targeting the STM32F030F4P6</h2>
+To be able to build a boot code that could bootstrap a board equipped with a
+STM32F030F4P6, I need to know the following about this micro-controller:
+<ul>
+<li> <b>Core</b>: Arm 32 bit <b>Cortex-M0</b> CPU.
+<li> 16KB <b>Flash</b> located at 0x08000000.
+<li> 4KB <b>Ram</b> located at 0x20000000.
+</ul>
+I make a copy of the sample <b>nokeep.ld</b> link script in my working folder
+under the name <b>f030f4.ld</b> and change the <b>MEMORY</b> region accordingly.
+
+<pre>
+MEMORY
+{
+    FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 16K
+    RAM   (rwx) : ORIGIN = 0x20000000, LENGTH =  4K
+}
+</pre>
+
+The <b>Makefile</b> needs the following changes:
+<ul>
+<li> Specify <b>f030f4.ld</b> as the link script
+<li> C compiler flags to generate thumb Cortex-M0 code.
+<li> Request the C compiler to generate extra warning and optimize for size.
+</ul>
+<pre>
+CPU = -mthumb -mcpu=cortex-m0
+CFLAGS = $(CPU) -g -Wall -Wextra -Os
+LD_SCRIPT = f030f4.ld
+</pre>
+
+At boot time, the Arm core fetches the initial address of the stack pointer
+and the address where to start execution from the first two entries of its
+interrupt routine table. I have to modify <b>boot.c</b> to initialize such a
+table in accord with the symbols defined in the link script.
+
+<pre>
+/* Memory locations defined by linker script */
+extern long __StackTop ;        /* &__StackTop points after end of stack */
+void Reset_Handler( void) ;     /* Entry point for execution */
+
+/* Interrupt vector table:
+ * 1  Stack Pointer reset value
+ * 15 System Exceptions
+ * NN Device specific Interrupts
+ */
+typedef void (*isr_p)( void) ;
+isr_p const isr_vector[ 2] __attribute__((section(".isr_vector"))) = {
+    (isr_p) &__StackTop,
+/* System Exceptions */
+    Reset_Handler
+} ;
+
+void Reset_Handler( void) {
+    for( ;;) ;
+}
+</pre>
+
+<b>__StackTop</b> is defined by the linker script and is located after the end
+of the RAM. I use the GNU C extension <b>__attribute__()</b> to name the section
+where I want the interrupt vector to be included. If you check the linker
+script you will see that it places <b>.isr_vector</b> at the start of the
+<b>text</b> area which is located at the beginning of the flash memory. I chose
+to name the interrupt vector table <b>isr_vector</b> to match the section name
+<b>.isr_vector</b>, but it is really the section name that matters here.
+
+<pre>
+$ make boot.hex
+boot.elf
+   text    data     bss     dec     hex filename
+     10       0       0      10       a boot.elf
+boot.hex
+rm boot.elf boot.o
+</pre>
+
+A build produces 10 bytes of code, I can check the disassembly in the
+<b>boot.lst</b> file.
+
+<pre>
+Disassembly of section .text:
+
+08000000 &lt;isr_vector>:
+ 8000000:   00 10 00 20 09 00 00 08                             ... ....
+
+08000008 &lt;Reset_Handler>:
+/* System Exceptions */
+    Reset_Handler
+} ;
+
+void Reset_Handler( void) {
+    for( ;;) ;
+ 8000008:   e7fe        b.n 8000008 &lt;Reset_Handler>
+</pre>
+<ul>
+<li> The interrupt vector table is at address <b>0x08000000</b>, the beginning
+of the flash.
+<li> Its first entry, the initial stack pointer value, is the address
+<b>0x20001000</b>, which is the first location after the end of the 4K RAM.
+<li> Its next entry is <b>0x08000009</b>. I expect <b>0x08000008</b> here, as
+this is the first location after the small interrupt vector table I created.
+The lowest bit is set to 1 to mark that it is indeed the address of an interrupt
+routine. So the value is correct even if an odd address value is not possible
+for an opcode location.
+<li> Finally, I found the code for our idle loop at <b>0x08000008</b> as
+expected.
+</ul>
+
+<h2>Checkpoint</h2>
+I have built a first executable targeting a member of the STM32 family.
+<p>
+<a href="13_flash.html">Next</a>, I will take a board with a STM32F030F4P6 and
+check if the code generated behaves as expected.
+<p>
+Below is the <b>Makefile</b> for reference. If you happen to cut&paste from this
+web page to a file, remember that <b><i>gmake</i></b> expects rules to be tab
+indented.
+
+<pre>
+### Build environment selection
+
+ifeq (linux, $(findstring linux, $(MAKE_HOST)))
+ GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+else
+ GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi"
+endif
+
+BINPFX  = @$(GCCDIR)/bin/arm-none-eabi-
+CC      = $(BINPFX)gcc
+LD      = $(BINPFX)ld
+OBJCOPY = $(BINPFX)objcopy
+OBJDUMP = $(BINPFX)objdump
+SIZE    = $(BINPFX)size
+
+CPU = -mthumb -mcpu=cortex-m0
+CFLAGS = $(CPU) -g -Wall -Wextra -Os
+LD_SCRIPT = f030f4.ld
+
+### Build rules
+
+.PHONY: clean
+
+clean:
+    @echo CLEAN
+    @rm -f *.o *.elf *.map *.lst *.bin *.hex
+
+%.elf: %.o
+    @echo $@
+    $(LD) -T$(LD_SCRIPT) -Map=$*.map -cref -o $@ $<
+    $(SIZE) $@
+    $(OBJDUMP) -hS $@ > $*.lst
+
+%.bin: %.elf
+    @echo $@
+    $(OBJCOPY) -O binary $< $@
+
+%.hex: %.elf
+    @echo $@
+    $(OBJCOPY) -O ihex $< $@
+</pre>
+
+    <hr>© 2020-2024 Renaud Fivet
+ </body>
+</html>

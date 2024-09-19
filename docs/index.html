@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <title>STM32 Bringup</title>
+    <link type="text/css" rel="stylesheet" href="style.css">
+ </head>
+ <body>
+<h1>STM32 Bringup</h1>
+
+<h2>Introduction</h2>
+Getting started with a micro-controller usually means picking up a board,
+an IDE, some RTOS or a set of libraries. Depending of your level of experience,
+your budget and the solutions you select, the learning curve may be a steep
+one and what you will learn can be very limited if you end up cornered in a
+sandbox with no understanding of what’s going on under the hood.
+<p>
+Commercial solutions and mature open source projects are a must if you want to
+develop products with some level of quality. Unfortunately their complexity is
+high because they have to satisfy complex requirements. Their documentation
+and source code when available are often hard to navigate, out of date or just
+not addressing what you need to learn.
+<p>
+Starting from scratch, on the other hand, is not something often documented and
+when it is, it is usually after the fact. So if you want to learn how to do it
+you need to catch the opportunity to watch someone going through the steps and
+explaining what’s going on.
+<p>
+I will try to capture here my own “STM32 bring up” journey using a step by step
+approach, writing down the problems faced and decisions taken while evolving
+simple projects.
+
+<h2>Part I: Bring it up!</h2>
+I proceed by small incremental steps that are easy to reproduce and simple
+enough to adapt to a variant of the micro-controller or a different board
+layout.
+<ul>
+<li> Pick up a <a href="11_toolchain.html">toolchain</a>, install it and check
+that it can build an executable.
+</ul><ul>
+<li> Write a minimal <a href="12_bootstrap.html">bootstrap</a> for a target
+micro-controller and build a first executable.
+</ul><ul>
+<li> <a href="13_flash.html">Flash</a> the first executable in an actual board
+and verify that it boots.
+</ul><ul>
+<li> Provide feedback by turning the <a href="14_ledon.html">user LED ON</a>
+and making it <a href="15_blink.html">blink</a>.
+</ul><ul>
+<li> Use the System <a href="16_ledtick.html">Tick</a> to handle the blinking.
+</ul><ul>
+<li> Insure that RAM memory is initialized as expected for a
+<a href="17_cstartup.html">C startup</a>.
+</ul><ul>
+<li> Structure the code according to the
+<a href="18_3stages.html">three stages</a>: boot, initialization and main
+execution.
+</ul><ul>
+<li> <a href="19_publish.html">Publish</a> the code to a web git repository
+for further evolution.
+</ul>
+
+<h2><a id="part2">Part II: Let's talk!</a></h2>
+
+It’s time to move to a more talkative interface so that the board not
+only winks but also speaks. Again I will go through several steps to get
+to a working asynchronous serial communication.
+<ul>
+<li> <a href="21_uart.html">Validate</a> the serial connection by wiring a
+board with an USB to UART adapter and using a Serial Flash loader application
+to read the chipset flash memory.
+</ul><ul>
+<li> Make sure that the code evolved so far works on the
+<a href="22_board.html">board</a> with a serial connection.
+</ul><ul>
+<li> Say <a href="23_hello.html">hello</a> as first transmission.
+</ul><ul>
+<li> Use <a href="24_stm32flash.html">stm32flash</a> as flashing tool on both
+Windows and Linux.
+</ul><ul>
+<li> <a href="25_prototype.html">Prototype</a> an application that tells how
+long the system has been running.
+</ul><ul>
+<li> Write a production version of <a href="26_uptime.html">uptime</a> application.
+</ul><ul>
+<li> Bundle the standard C library output functions into an actual
+  <a href="27_library.html">library</a>.
+</ul><ul>
+<li> <a href="28_clocks.html">Configure</a> baud rate and clocks.
+</ul><ul>
+<li> Handle the transmission with <a href="29_interrupt.html">interrupt</a>.
+</ul>
+
+<h2><a id="part3">Part III: Sensors! So hot! So wet!</a></h2>
+<ul>
+<li> Implement <a href="31_dht11.html">DHT11</a> humidity and temperature
+sensor reading.
+</ul><ul>
+<li> <a href="32_errata.html">Investigate</a> the quality of the DHT11
+measurements.
+</ul><ul>
+<li> Use <a href="33_ds18b20.html">DS18B20</a> digital thermometer for accurate
+temperature reading.
+</ul><ul>
+<li> Trigger <a href="34_adcvnt.html">ADC</a> conversion to read the internal
+voltage and temperature sensors.
+</ul><ul>
+<li> <a href="35_calibrate.html">Calibrate</a> the internal temperature sensor.
+</ul><ul>
+<li> <a href="36_update.html">Update</a> toolchain to latest.
+</ul><ul>
+<li> Build for <a href="37_inram.html">In RAM Execution</a>.
+</ul><ul>
+<li> Perform <a href="38_crc32.html">CRC-32</a> flash content validation
+during startup.
+</ul><ul>
+<li> Read a <a href="39_resistor.html">Resistor</a> Value.
+</ul>
+
+<h2>Appendices</h2>
+
+<ul>
+<li> <a href="AA_factory.html">Factory-programmed</a> values.
+</ul>
+
+    <hr>© 2020-2024 Renaud Fivet
+ </body>
+</html>

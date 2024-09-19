@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <title>1.3 Flash – Boot – Debug</title>
+    <link type="text/css" rel="stylesheet" href="style.css">
+ </head>
+ <body>
+<h1>1.3 Flash – Boot – Debug</h1>
+
+Now that I have an executable bootstrap, I need to flash an actual board
+with it to check if it works as expected. On a member of the STM32F030
+family, there are two options for flashing:
+<ul>
+<li> Use the Software Debug (<b>SWD</b>) interface with a ST-Link adapter and an
+utility software to flash.
+<li> Use the serial interface to communicate with the boot loader in System
+Memory via an USB to serial adapter.
+</ul>
+As the bootstrap code I want to test does nothing except giving control
+to an idle loop, I will need extra debugging on top of the flashing
+functionality, so the SWD interface is a must for what I want to achieve
+here.
+
+<h2>ST-Link<h2>
+
+<h3>1. SWD interface</h3>
+
+Arm Serial Wire Debug Port (<b>SW-DP</b>) is provided as a two wire interface.
+On the STM32F030, the functionality is activated at reset on two pins
+(PA13=SWCLK, PA14=SWDIO). Most boards available online have pre-soldered
+pins for Vcc=3.3V, Gnd, SWCLK and SWDIO.
+
+<h3>2. ST-Link v2</h3>
+
+ST-Link is an in-circuit debugger/programmer for the STM8 and STM32
+chipsets. There are three versions of the product as well as mini
+versions. STM32 Discovery and Nucleo boards have an onboard ST-Link v2.
+I am using ST-Link v2 mini clones. For simple use cases, the ST-Link can
+provide power to the board to flash or test.
+<p>
+<img src="img/13_stlink.png"
+alt="ST-Link v2 mini clone connected to STM32F030F4P6 based board">
+
+<h3>3. STM32 Cube Programmer</h3>
+
+Referenced as
+<a href="https://www.st.com/content/st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-programmers/stm32cubeprog.html">
+STM32CubeProg</a>
+on STMicroelectronics website, the STM32 Cube Programmer comes with USB
+drivers and a firmware upgrade utility for the ST-Link. It’s a java
+based application with available distribution for Win32, Win64, Mac and Linux.
+There are regular updates to support the latest chipsets. I am currently
+using version v2.17.0.
+
+<h2>Roadtesting the Bootstrap</h2>
+
+First I activate the connection in the programmer.
+
+<pre>
+  14:37:31 : STM32CubeProgrammer API v2.17.0 | Windows-64Bits 
+  14:37:38 : UR connection mode is defined with the HWrst reset mode
+  14:37:38 : ST-LINK SN  : 55FF6B065177495619420887
+  14:37:38 : ST-LINK FW  : V2J45S7
+  14:37:38 : Board       : --
+  14:37:38 : Voltage     : 3.27V
+  14:37:38 : SWD freq    : 4000 KHz
+  14:37:38 : Connect mode: Hot Plug
+  14:37:38 : Reset mode  : Software reset
+  14:37:38 : Device ID   : 0x444
+  14:37:38 : Revision ID : Rev 1.0
+  14:37:38 : Debug in Low Power mode is not supported for this device.
+  14:37:39 : UPLOADING OPTION BYTES DATA ...
+  14:37:39 :   Bank          : 0x00
+  14:37:39 :   Address       : 0x1ffff800
+  14:37:39 :   Size          : 16 Bytes
+  14:37:39 : UPLOADING ...
+  14:37:39 :   Size          : 1024 Bytes
+  14:37:39 :   Address       : 0x8000000
+  14:37:39 : Read progress:
+  14:37:39 : Data read successfully
+  14:37:39 : Time elapsed during the read operation is: 00:00:00.007
+</pre>
+
+Then program and verify the bootstrap code. Either binary, Intel hex or
+Motorola S rec format are supported. Our <b>Makefile</b> as rules for binary
+and Intel hex, <b><i>objcopy</i></b> also support Motorola S record as an output
+format. Last build produced <b>boot.hex</b>.
+
+<pre>
+  14:40:24 : Memory Programming ...
+  14:40:24 : Opening and parsing file: boot.hex
+  14:40:24 :   File          : boot.hex
+  14:40:24 :   Size          : 10.00 B 
+  14:40:24 :   Address       : 0x08000000 
+  14:40:24 : Erasing memory corresponding to segment 0:
+  14:40:24 : Erasing internal memory sector 0
+  14:40:24 : Download in Progress:
+  14:40:24 : File download complete
+  14:40:24 : Time elapsed during download operation: 00:00:00.130
+  14:40:24 : Verifying ...
+  14:40:24 : Read progress:
+  14:40:24 : Download verified successfully 
+  14:40:24 : RUNNING Program ... 
+  14:40:24 :   Address:      : 0x08000000
+  14:40:24 : Application is running, Please Hold on...
+  14:40:24 : Start operation achieved successfully
+</pre>
+Finally check the registers in the MCU Core Panel:
+
+<pre>
+MSP: 0x20001000
+PC:  0x8000008
+</pre>
+
+After reset, the stack pointer has been initialized and the program
+counter is on the idle loop under execution.
+<p>
+If I check the Programming Manual
+<a href="https://www.st.com/content/st_com/en/search.html#q=PM0215-t=resources-page=1">
+PM0215 <i>STM32F0 series Cortex-M0 programming manual</i></a>, I can
+read the following about the registers <b>MSP</b> and <b>PC</b>:
+
+<pre>
+Stack pointer (SP) register R13
+ In Thread mode, bit[1] of the CONTROL register indicates the stack
+ pointer to use:
+ ● 0: Main Stack Pointer (MSP)(reset value). On reset, the processor
+ loads the MSP with the value from address 0x00000000.
+ ● 1: Process Stack Pointer (PSP).
+
+Program counter (PC) register R15
+ Contains the current program address. On reset, the processor loads the PC
+ with the value of the reset vector, which is at address 0x00000004.
+ Bit[0] of the value is loaded into the EPSR T-bit at reset and must be 1.
+</pre>
+
+- According to this, initial values for <b>MSP</b> and <b>PC</b> registers are
+fetched from address <b>0x00000000</b> and <b>0x00000004</b> respectively, but
+I have located the isr table at the beginning of the Flash memory at
+address <b>0x08000000</b>! This works because the memory space at address 0
+is a mirror of another memory area. Which area is mirrored depends of
+the state of the <b>BOOT0</b> pin. On the board I am testing, there is a
+jumper to select either Flash or System memory by setting the state of
+the <b>BOOT0</b> pin to high or low.
+<p>
+- The <b>ESPR T-bit</b>, mentioned in the description of the <b>PC</b>
+register is the Thumb bit. As I highlighted before when I checked the
+output of our first build, bit 0 of the second entry in our isr table is
+set to 1 as requested by this specification.
+
+<h2>Checkpoint</h2>
+
+I used the Serial Wire Debug (SWD) interface to flash and debug our bootstrap
+in an actual board using a ST-Link hardware adapter and STM32 Cube Programmer
+application.
+<p>
+<a href="14_ledon.html">Next</a>, I will provide feedback of execution directly
+through the board.
+
+    <hr>© 2020-2024 Renaud Fivet
+ </body>
+</html>
