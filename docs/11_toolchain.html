@@ -11,7 +11,8 @@ Arm maintains a GCC cross-compiler available as binaries that run on Linux and
 Windows.<br>It is available on their
 <a href="https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm">
 arm developer site</a>.
-
+<p>
+I want to develop for <b>AArch32 bare-metal target (arm-none-eabi)</b>.
 <h2>Installation on Windows</h2>
 So far there are only win32 versions available for download either as
 <b>.exe</b> installers or <b>.zip</b> archives. File naming convention helps to
@@ -37,6 +38,7 @@ CC      = $(BINPFX)gcc
 
 version:
     $(CC) --version
+
 </pre>
 <ul>
 <li> <b>GCCDIR</b> holds the path to the folder where the toolchain is installed.
@@ -88,6 +90,7 @@ CC      = $(BINPFX)gcc
 
 version:
     $(CC) --version
+
 </pre>
 
 I use the path prefix <b>$(HOME)/Packages</b> instead of <b>~/Packages</b> when
@@ -151,6 +154,7 @@ LD_SCRIPT = $(GCCDIR)/share/gcc-arm-none-eabi/samples/ldscripts/mem.ld
 
 %.elf: %.o
     $(LD) -T$(LD_SCRIPT) -o $@ $<
+
 </pre>
 
 <pre>
@@ -191,6 +195,7 @@ LD_SCRIPT = $(GCCDIR)/share/gcc-arm-none-eabi/samples/ldscripts/mem.ld
 
 %.hex: %.elf
     $(OBJCOPY) -O ihex $< $@
+
 </pre>
 
 Now, if I start in a directory that contains only this <b>Makefile</b> and an
@@ -263,6 +268,7 @@ clean:
 %.hex: %.elf
     @echo $@
     $(OBJCOPY) -O ihex $< $@
+
 </pre>
 
 <pre>
