@@ -84,7 +84,7 @@ LD_SCRIPT = $(GCCDIR)/share/gcc-arm-none-eabi/samples/ldscripts/nokeep.ld
 <pre>
 $ make empty.elf
 empty.elf
-D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-13.3.rel1-mi
+D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-14.2.rel1-mi
 ngw-w64-i686-arm-none-eabi\bin\arm-none-eabi-ld.exe: warning: cannot find entry 
 symbol Reset_Handler; defaulting to 00000000
 rm empty.o
@@ -175,7 +175,7 @@ LD_SCRIPT = f030f4.ld
 At boot time, the Arm core fetches the initial address of the stack pointer
 and the address where to start execution from the first two entries of its
 interrupt routine table. I have to modify <b>boot.c</b> to initialize such a
-table in accord with the symbols defined in the link script.
+table in accordance with the symbols defined in the link script.
 
 <pre>
 /* Memory locations defined by linker script */
@@ -262,9 +262,9 @@ indented.
 ### Build environment selection
 
 ifeq (linux, $(findstring linux, $(MAKE_HOST)))
- GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+ GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi
 else
- GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi"
+ GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi"
 endif
 
 BINPFX  = @$(GCCDIR)/bin/arm-none-eabi-
@@ -280,7 +280,10 @@ LD_SCRIPT = f030f4.ld
 
 ### Build rules
 
-.PHONY: clean
+.PHONY: clean version
+
+version:
+    $(CC) --version
 
 clean:
     @echo CLEAN
@@ -302,6 +305,6 @@ clean:
 
 </pre>
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

@@ -241,12 +241,12 @@ Unfortunately, the build fails at the link phase.
 <pre>
 $ make
 f030f4.elf
-D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-13.3.rel1-mi
+D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-14.2.rel1-mi
 ngw-w64-i686-arm-none-eabi\bin\arm-none-eabi-ld.exe: uptime.o: in function `main
 ':
-D:\Projects\stm32bringup\docs/uptime.c:41:(.text.startup+0xa4): 
-undefined reference to `putchar'
-make: *** [Makefile:49: f030f4.elf] Error 1
+D:\home\Projects\stm32bringup/uptime.c:41:(.text.startup+0xa4): undefined refere
+nce to `putchar'
+make: *** [Makefile:53: f030f4.elf] Error 1
 </pre>
 
 The linker found a reference to <code>putchar()</code> at line 41 of
@@ -284,7 +284,7 @@ The build now complete successfully.
 $ make
 f030f4.elf
    text    data     bss     dec     hex filename
-   1797       0      12    1809     711 f030f4.elf
+   1325       0      12    1337     539 f030f4.elf
 f030f4.hex
 f030f4.bin
 </pre>
@@ -297,14 +297,24 @@ code to handle <code>switch()</code> statement are now referenced.
 <pre>
 Archive member included to satisfy reference by file (symbol)
 
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a(_thumb1_case_sqi.o)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
+(_thumb1_case_sqi.o)
                               printf.o (__gnu_thumb1_case_sqi)
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
+(_udivsi3.o)
                               uptime.o (__aeabi_uidiv)
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
+(_divsi3.o)
                               uptime.o (__aeabi_idiv)
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a(_dvmd_tls.o)
-                              D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o) (__aeabi_idiv0)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
+(_dvmd_tls.o)
+                              D:/Program Files (x86)/GNU Arm Embedded Toolchain/
+arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/1
+4.2.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o) (__aeabi_idiv0)
 </pre>
 
 <h2>Test</h2>
@@ -326,14 +336,14 @@ make sure days and weeks values are correct. It’s also clear that the
 test coverage for the printf format interpreter is not sufficient as I have
 coded more than is necessary to implement <b>uptime</b>.
 <p>
-I didn’t expect gcc to optimize call to high level C functions,
-replacing <code>printf()</code> by <code>putchar()</code>, thus forcing me to
-write additional code. So far I am not concerned by execution speed, so this
+I didn’t expect gcc to optimize calls to high level C functions,
+replacing some <code>printf()</code> by <code>putchar()</code>, thus forcing me
+to write additional code. So far I am not concerned by execution speed, so this
 type of optimization is a bit counter productive.
 <p>
 <a href="27_library.html">Next</a>, I will make sure that what belongs to the
 library category fits in an actual library file.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

@@ -36,7 +36,7 @@ int puts( const char *s) {
 <h2>Updating Makefile</h2>
 
 I need to tell <b>GNU make</b> how to manage and use the library, which
-means updating <b>Makefile</b>.
+means updating <b>Makefile</b> with the following informations:
 <p>
 What’s the name, the content and the rule to maintain the library:
 
@@ -88,7 +88,7 @@ Build terminates successfully producing the same executable as before.
 $ make
 f030f4.elf from startup.o uplow.2.o uptime.o
    text    data     bss     dec     hex filename
-   1797       0      12    1809     711 f030f4.elf
+   1325       0      12    1337     539 f030f4.elf
 f030f4.hex
 f030f4.bin
 </pre>
@@ -100,26 +100,22 @@ newly created library.
 <pre>
 Archive member included to satisfy reference by file (symbol)
 
-.\libstm32.a(printf.o)        uptime.o (printf)
-.\libstm32.a(putchar.o)       uptime.o (putchar)
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
-ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+libstm32.a(printf.o)          uptime.o (printf)
+libstm32.a(putchar.o)         uptime.o (putchar)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
 (_thumb1_case_sqi.o)
-                              .\libstm32.a(printf.o) (__gnu_thumb1_case_sqi)
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
-ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+                              libstm32.a(printf.o) (__gnu_thumb1_case_sqi)
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
 (_udivsi3.o)
                               uptime.o (__aeabi_uidiv)
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
-ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
-(_divsi3.o)
-                              uptime.o (__aeabi_idiv)
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
-ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
 (_dvmd_tls.o)
                               D:/Program Files (x86)/GNU Arm Embedded Toolchain/
-arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/1
-3.3.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o) (__aeabi_idiv0)
+arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/1
+4.2.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o) (__aeabi_idiv0)
 </pre>
 
 <h2>Building hello</h2>
@@ -147,7 +143,7 @@ Checking the map file produced in the link phase, I can see that only
 <pre>
 Archive member included to satisfy reference by file (symbol)
 
-.\libstm32.a(puts.o)          hello.o (puts)
+libstm32.a(puts.o)          hello.o (puts)
 </pre>
 
 <h2>Checkpoint</h2>
@@ -159,6 +155,6 @@ implementation of the standard C library output functions is a simple step.
 <a href="28_clocks.html">Next</a>, I will continue on the topic of asynchronous serial
 transmission and look into baud rate and clock configuration.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

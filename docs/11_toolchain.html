@@ -27,10 +27,10 @@ IDE or encapsulate those paths and names in <b>Makefile</b> variables.
 <pre>
 ### Build environment selection
 
-GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi"
+GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi"
 
-BINPFX  = $(GCCDIR)/bin/arm-none-eabi-
-CC      = $(BINPFX)gcc
+BINPFX = $(GCCDIR)/bin/arm-none-eabi-
+CC     = $(BINPFX)gcc
 
 ### Build rules
 
@@ -49,11 +49,11 @@ share the same name prefix <b>arm-none-eabi-</b>. So I have created a
 </ul>
 <pre>
 $ make
-"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-m
+"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-m
 ingw-w64-i686-arm-none-eabi"/bin/arm-none-eabi-gcc --version
-arm-none-eabi-gcc.exe (Arm GNU Toolchain 13.3.Rel1 (Build arm-13.24)) 13.3.1 202
-40614
-Copyright (C) 2023 Free Software Foundation, Inc.
+arm-none-eabi-gcc.exe (Arm GNU Toolchain 14.2.Rel1 (Build arm-14.52)) 14.2.1 202
+41119
+Copyright (C) 2024 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 </pre>
@@ -65,20 +65,20 @@ means that the <b>Makefile</b> on Linux will be the same as the Windows one
 except for the value of the <b>GCCDIR</b> variable.
 
 <pre>
-GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi
 </pre>
 
 By selecting the path based on the development environment, there is no need
-to make changes while switching between OS. <b>Gmake</b> has the built-in
+to make changes while switching between OS. <b><i>gmake</i></b> has the built-in
 variable <b>MAKE_HOST</b> that can be tested for this.
 
 <pre>
 ### Build environment selection
 
 ifeq (linux, $(findstring linux, $(MAKE_HOST)))
- GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+ GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi
 else
- GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi"
+ GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi"
 endif
 
 BINPFX  = $(GCCDIR)/bin/arm-none-eabi-
@@ -94,9 +94,9 @@ version:
 </pre>
 
 I use the path prefix <b>$(HOME)/Packages</b> instead of <b>~/Packages</b> when
-defining <b>GCCDIR</b> as some sub-processes called by <i>gmake</i> may have
-issues with <b>~</b> expansion (in this case <i>ld</i>). This way <i>gmake</i>
-will handle the expansion before calling the sub-processes.
+defining <b>GCCDIR</b> as some sub-processes called by <b><i>gmake</i></b> may
+have issues with <b>~</b> expansion (in this case <i>ld</i>). This way
+<b><i>gmake</i></b> will handle the expansion before calling the sub-processes.
 
 <h2>Toolchain’s chain of events</h2>
 In order to generate a file that can be loaded in the micro-controller, I
@@ -109,7 +109,8 @@ executable (<b>.elf</b>)
 loading or flashing (<b>.bin</b> or <b>.hex</b>).
 </ol>
 <h3>1. Compile</h3>
-<b>Gmake</b> has default rules to built <b>.o</b> files out of <b>.c</b> files.
+<b><i>gmake</i></b> has default rules to built <b>.o</b> files out of <b>.c</b>
+files.
 As I have already defined with <b>CC</b> the command to compile, I can make a
 simple test of this step by creating an empty <b>.c</b> file and checking what
 happens when I try to compile it.
@@ -118,7 +119,7 @@ happens when I try to compile it.
 $ touch empty.c
 
 $ make empty.o
-"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-m
+"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-m
 ingw-w64-i686-arm-none-eabi"/bin/arm-none-eabi-gcc    -c -o empty.o empty.c
 </pre>
 Compilation is succesful and <b>empty.o</b> file is generated.
@@ -139,9 +140,9 @@ use the simplest script: <b>mem.ld</b>.
 ### Build environment selection
 
 ifeq (linux, $(findstring linux, $(MAKE_HOST)))
- GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+ GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi
 else
- GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi"
+ GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi"
 endif
 
 BINPFX  = $(GCCDIR)/bin/arm-none-eabi-
@@ -152,6 +153,11 @@ LD_SCRIPT = $(GCCDIR)/share/gcc-arm-none-eabi/samples/ldscripts/mem.ld
 
 ### Build rules
 
+.PHONY: version
+
+version:
+    $(CC) --version
+
 %.elf: %.o
     $(LD) -T$(LD_SCRIPT) -o $@ $<
 
@@ -159,23 +165,24 @@ LD_SCRIPT = $(GCCDIR)/share/gcc-arm-none-eabi/samples/ldscripts/mem.ld
 
 <pre>
 $ make empty.elf
-"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-m
+"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-m
 ingw-w64-i686-arm-none-eabi"/bin/arm-none-eabi-ld -T"D:/Program Files (x86)/GNU 
-Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi"
+Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi"
 /share/gcc-arm-none-eabi/samples/ldscripts/mem.ld -o empty.elf empty.o
 </pre>
 Link terminates successfully and creates <b>empty.elf</b>.
 <h3>3. Convert</h3>
-Finally, I use the command <b>objcopy</b> to convert the executable <b>.elf</b>
-file into binary or intel hex format suitable to load in the micro-controller.
+Finally, I use the command <b><i>objcopy</i></b> to convert the executable
+<b>.elf</b> file into binary or intel hex format suitable to load in the
+micro-controller.
 
 <pre>
 ### Build environment selection
 
 ifeq (linux, $(findstring linux, $(MAKE_HOST)))
- GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+ GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi
 else
- GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi"
+ GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi"
 endif
 
 BINPFX  = $(GCCDIR)/bin/arm-none-eabi-
@@ -186,6 +193,11 @@ OBJCOPY = $(BINPFX)objcopy
 LD_SCRIPT = $(GCCDIR)/share/gcc-arm-none-eabi/samples/ldscripts/mem.ld
 
 ### Build rules
+
+.PHONY: version
+
+version:
+    $(CC) --version
 
 %.elf: %.o
     $(LD) -T$(LD_SCRIPT) -o $@ $<
@@ -203,23 +215,23 @@ empty <b>empty.c</b> file, I can successfully build.
 
 <pre>
 $ make empty.bin empty.hex
-"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-m
+"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-m
 ingw-w64-i686-arm-none-eabi"/bin/arm-none-eabi-gcc    -c -o empty.o empty.c
-"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-m
+"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-m
 ingw-w64-i686-arm-none-eabi"/bin/arm-none-eabi-ld -T"D:/Program Files (x86)/GNU 
-Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi"
+Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi"
 /share/gcc-arm-none-eabi/samples/ldscripts/mem.ld -o empty.elf empty.o
-"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-m
+"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-m
 ingw-w64-i686-arm-none-eabi"/bin/arm-none-eabi-objcopy -O binary empty.elf empty
 .bin
-"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-m
+"D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-m
 ingw-w64-i686-arm-none-eabi"/bin/arm-none-eabi-objcopy -O ihex empty.elf empty.h
 ex
 rm empty.o empty.elf
 </pre>
 
-Notice that <b>gmake</b> automatically removes the intermediary <b>.o</b> and
-<b>.elf</b> files on completion.
+Notice that <b><i>gmake</i></b> automatically removes the intermediary
+<b>.o</b> and <b>.elf</b> files on completion.
 <p>
 The generated <b>empty.bin</b> is empty.
 
@@ -229,7 +241,7 @@ of the long command names. Also I need a way to clean the working directory
 back to its initial state.
 <ul>
 <li>By prefixing <b>BINPFX</b> with <i>@</i>, commands will not be displayed by
-<i>gmake</i> when they are executed. Adding an <b>echo</b> of the command
+<b><i>gmake</i></b> when they are executed. Adding an <b>echo</b> of the command
 target in the rules helps to keep track of the build progression.
 <li>A new <b>clean</b> rule will remove all generated files.
 </ul>
@@ -237,9 +249,9 @@ target in the rules helps to keep track of the build progression.
 ### Build environment selection
 
 ifeq (linux, $(findstring linux, $(MAKE_HOST)))
- GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+ GCCDIR = $(HOME)/Packages/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi
 else
- GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi"
+ GCCDIR = "D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi"
 endif
 
 BINPFX  = @$(GCCDIR)/bin/arm-none-eabi-
@@ -251,7 +263,10 @@ LD_SCRIPT = $(GCCDIR)/share/gcc-arm-none-eabi/samples/ldscripts/mem.ld
 
 ### Build rules
 
-.PHONY: clean
+.PHONY: clean version
+
+version:
+    $(CC) --version
 
 clean:
     @echo CLEAN
@@ -289,6 +304,6 @@ source file (<b>empty.c</b>) to an empty binary file (<b>empty.bin</b>).
 <a href="12_bootstrap.html">Next</a>, I will select a micro-controller
 from the STM32 family and generate a binary file that it can execute.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

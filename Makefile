@@ -1,5 +1,5 @@
 # Makefile -- stm32bringup
-# Copyright © 2020-2024 Renaud Fivet
+# Copyright © 2020-2025 Renaud Fivet
 
 ### Build environment selection
 
@@ -15,7 +15,8 @@ ifeq (linux, $(findstring linux, $(MAKE_HOST)))
 #REVDIR = arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi
 #REVDIR = arm-gnu-toolchain-12.2.mpacbti-rel1-x86_64-arm-none-eabi
 #REVDIR = arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi
- REVDIR = arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+#REVDIR = arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi
+ REVDIR = arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi
 else
  DRIVE = d
 ifeq (cygwin, $(findstring cygwin, $(MAKE_HOST)))
@@ -40,7 +41,8 @@ endif
 #REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-12.2.rel1-mingw-w64-i686-arm-none-eabi
 #REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-12.2.mpacbti-rel1-mingw-w64-i686-arm-none-eabi
 #REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi
- REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi
+#REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi
+ REVDIR = GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi
 endif
 
 GCCDIR = $(INSTALLDIR)/$(REVDIR)

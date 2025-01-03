@@ -98,15 +98,15 @@ Unfortunately, when I try to build an executable, the link phase fails.
 <pre>
 $ make
 f030f4.elf
-D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-13.3.rel1-mi
+D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-14.2.rel1-mi
 ngw-w64-i686-arm-none-eabi\bin\arm-none-eabi-ld.exe: uptime.1.o: in function `kp
 utu':
-D:\Projects\stm32bringup\docs/uptime.1.c:13:(.text+0x6): undefined reference to 
+D:\home\Projects\stm32bringup/uptime.1.c:13:(.text+0x6): undefined reference to 
 `__aeabi_uidivmod'
-D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-13.3.rel1-mi
-ngw-w64-i686-arm-none-eabi\bin\arm-none-eabi-ld.exe: D:\Projects\stm32bringup\do
-cs/uptime.1.c:14:(.text+0x14): undefined reference to `__aeabi_uidiv'
-make: *** [Makefile:45: f030f4.elf] Error 1
+D:\Program Files (x86)\GNU Arm Embedded Toolchain\arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi\bin\arm-none-eabi-ld.exe: D:\home\Projects\stm32bring
+up/uptime.1.c:14:(.text+0x14): undefined reference to `__aeabi_uidiv'
+make: *** [Makefile:49: f030f4.elf] Error 1
 </pre>
 
 The compiler has generated code that references two functions
@@ -123,12 +123,12 @@ no integer division support. So integer division needs to be implemented
 by code as it is not supported by hardware.
 
 I need to pass the linker a reference to GNU Arm Embedded Toolchain
-library for Cortex-M0. The library file is <b>libggc.a</b>, the option -l and
+library for Cortex-M0. The library file is <b>libgcc.a</b>, the option -l and
 -L of the linker tell what the library name is (-lgcc => libgcc.a) and
 where to look for it.
 
 <pre>
-LIBDIR  = $(GCCDIR)/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp
+LIBDIR  = $(GCCDIR)/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp
 LIB_PATHS = -L$(LIBDIR)
 LIBS = -lgcc
 
@@ -158,16 +158,16 @@ symbols (<code>__aeabi_uidiv</code> and <code>__aeabi_idiv0</code>).
 <pre>
 Archive member included to satisfy reference by file (symbol)
 
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
-ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
 (_udivsi3.o)
                               uptime.1.o (__aeabi_uidiv)
-D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-13.3.rel1-mi
-ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/thumb/v6-m/nofp\libgcc.a
+D:/Program Files (x86)/GNU Arm Embedded Toolchain/arm-gnu-toolchain-14.2.rel1-mi
+ngw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
 (_dvmd_tls.o)
                               D:/Program Files (x86)/GNU Arm Embedded Toolchain/
-arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/1
-3.3.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o) (__aeabi_idiv0)
+arm-gnu-toolchain-14.2.rel1-mingw-w64-i686-arm-none-eabi/lib/gcc/arm-none-eabi/1
+4.2.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o) (__aeabi_idiv0)
 </pre>
 
 <h2>Testing</h2>
@@ -205,12 +205,13 @@ the <b>gcc</b> library.
 <li> LIBS = -lstm32
 </ul>
 </ol>
-The <code>ar</code> command distributed by the GNU Arm embedded toolchain is
-the same <b>GNU ar</b> as the Linux or Cygwin and MSYS2 distributions on
-Windows. So I use my native environment implementation for convenience.
-This is true for the utility commands (<code>ar</code>, <code>objcopy</code>,
-<code>objdump</code> and <code>size</code>) but not for <code>gcc</code> and
-<code>ld</code>.
+The <b><i>ar</i></b> command distributed by the GNU Arm embedded toolchain is
+the same <b>GNU <i>ar</i></b> as found in the Linux distributions or Cygwin and
+MSYS2 distributions on Windows. So I use my native environment implementation
+for convenience.
+This is true for the utility commands (<b><i>ar</i></b>, <b><i>objcopy</i></b>,
+<b><i>objdump</i></b> and <b><i>size</i></b>) but not for <b><i>gcc</i></b> and
+<b><i>ld</i></b>.
 
 <h2>Checkpoint</h2>
 
@@ -225,6 +226,6 @@ I can use <code>ar</code> to extract locally those modules from the library.
 <a href="26_uptime.html">Next</a>, I will write <code>uptime</code> with a
 better structure.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

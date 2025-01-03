@@ -246,18 +246,18 @@ Build completes successfully
 $ make
 f030f4.elf from startup.txeie.o txeie.o uptime.o
    text    data     bss     dec     hex filename
-   2097       0      20    2117     845 f030f4.elf
+   1641       0      20    1661     67d f030f4.elf
 f030f4.hex
 f030f4.bin
 </pre>
 
 Checking the map and lst files I can verify that
 <ul>
-<li> This code has grown by 128 bytes due to the 32 extra interrupt handlers.
+<li> 128 bytes of the code growth is due to the 32 extra interrupt handlers.
 
 <li> Previous implementation of <code>kputc()</code> was using 4 bytes of bss
-to hold lastchar (1 byte). The new version uses 12 bytes to hold the round
-robin buffer (8 bytes), its in and out indexes (2 bytes) and lastchar (1 byte).
+to hold lastc (1 byte). The new version uses 12 bytes to hold the round robin
+buffer (8 bytes), its in and out indexes (2 bytes) and lastc (1 byte).
 
 <li> The compiler optimizes the modulo instruction in <code>% size</code> to
 bit masking <code>& (size – 1)</code> as the size 8 is a power of 2.
@@ -274,6 +274,6 @@ second, there is plenty of idle time.
 <a href="index.html#part3">Next</a>, I will use an external sensor to do some
 measurement.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

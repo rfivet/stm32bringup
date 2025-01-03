@@ -111,7 +111,7 @@ To build I update the software composition in <b>Makefile</b> by adding a new
 <pre>SRCS = startup.c usart1tx.c hello.c</pre>
 
 Calling make, I can see that there is now some variable in <b>BSS</b> section
-of the RAM. It is <code>lastchar</code> local to <code>kputc()</code>. Because
+of the RAM. It is <code>lastc</code> local to <code>kputc()</code>. Because
 of word alignment <code>BSS</code> occupies 4 bytes.
 
 <pre>
@@ -155,6 +155,6 @@ support for other stdio functions when needed.
 <a href="24_stm32flash.html">Next</a>, I will switch to an open source  tool
 for flashing over serial connection that works on both Windows and Linux.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>
