@@ -1,12 +1,12 @@
 /* dht11main.c -- sample DHT11 sensor   */
-/* Copyright (c) 2020-2021 Renaud Fivet */
+/* Copyright (c) 2020-2023 Renaud Fivet */
 #include <stdio.h>
 
 #include "system.h"
 #include "dht11.h"
 
 int main( void) {
-    static unsigned last ;
+    unsigned last = 0 ;
 
     dht11_init() ;
     for( ;;)
@@ -17,7 +17,8 @@ int main( void) {
             if( 2 == (last % 5))    /* every 5 seconds starting 2s after boot */
                 switch( dht11_read()) {
                 case DHT11_SUCCESS:
-                    printf( "%u%%RH, %d.%uC\n", dht11_humid, dht11_tempc, dht11_tempf) ;
+                    printf( "%u%%RH, %d.%uC\n", dht11_humid, dht11_tempc,
+                                                                dht11_tempf) ;
                     break ;
                 case DHT11_FAIL_TOUT:
                     puts( "Timeout") ;

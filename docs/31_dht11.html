@@ -220,7 +220,7 @@ Based on this API, I write <b>dht11main.c</b>.
 #include "dht11.h"
 
 int main() {
-    static unsigned last ;
+    unsigned last = 0 ;
 
     dht11_init() ;
     for( ;;)
@@ -408,7 +408,7 @@ Build completes successfully
 $ make
 f030f4.elf from startup.txeie.o gpioa.o dht11main.o dht11.o
    text    data     bss     dec     hex filename
-   1877       0      24    1901     76d f030f4.elf
+   1861       0      20    1881     759 f030f4.elf
 f030f4.hex
 f030f4.bin
 </pre>
@@ -429,6 +429,6 @@ can read the values reported by the DHT11 sensor.
 <a href="32_errata.html">Next</a>, I will investigate if the values read are
 correct.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

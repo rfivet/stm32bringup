@@ -384,7 +384,7 @@ ledtick.elf: ledtick.o
 cstartup.elf: cstartup.o
 
 %.elf:
-    @echo $@
+    @echo $@ from $+
     $(CC) $(CPU) -T$(LD_SCRIPT) $(LDFLAGS) -nostartfiles -o $@ $+
     $(SIZE) $@
     $(OBJDUMP) -hS $@ > $(subst .elf,.lst,$@)
@@ -397,15 +397,26 @@ The projects composition need to be updated to use the new startup.
 Finally, to keep track of the memory model and the load location, I put
 the load address in the name of the binary file generated.
 
-<pre>all: $(PROJECT).$(BINLOC).bin $(PROJECT).hex</pre>
+<pre>all: $(PROJECT).hex $(PROJECT).$(BINLOC).bin</pre>
+
+With the corresponding rule
+
+<pre>
+%.$(BINLOC).bin: %.elf
+    @echo $@
+    $(OBJCOPY) -O binary $< $@
+</pre>
 
 This way if I build uptime prototype in GORAM memory model
 
 <pre>
 $ make
-f030f4.elf
+f030f4.elf from startup.ram.o txeie.o uptime.1.o libstm32.a
+Memory region         Used Size  Region Size  %age Used
+           FLASH:        1163 B         2 KB     56.79%
+             RAM:         208 B         2 KB     10.16%
    text    data     bss     dec     hex filename
-   1164       0      20    1184     4a0 f030f4.elf
+   1163       0     208    1371     55b f030f4.elf
 f030f4.hex
 f030f4.0x20000800.bin
 </pre>
@@ -419,18 +430,17 @@ $ stm32flash -g 0x20000800
 
 <h2>Caveat: stm32flash v0.6 intel hex bug</h2>
 
-At the time of writing, <b>stm32flash</b> v0.6 has a bug that prevents
-writing intel hex files correctly at address other than the origin of
-the Flash. A bug fix and the possibility to directly read the base
-address from the intel hex file are planned to be included in v0.7.
+<b>stm32flash</b> v0.6 had a bug that prevents writing intel hex files
+correctly at address other than the origin of the Flash. A bug fix and the
+possibility to directly read the base address from the intel hex file was
+merged in v0.7.
 <p>
-Until v0.7 is out, I am using my own patched version of stm32flash or
-the binary files when I need to test GOFLASH and GORAM memory models.
-<p>
-As I branched off my own patched version of <b>stm32flash</b>, I added a
+I have branched off my own patched version of <b>stm32flash</b>, I added a
 <code>-x</code> option to write and execute an intel hex file:
 
 <pre>stm32flash -x file.hex COM#</pre>
+
+This patch is scheduled to be merged in v0.8.
 
 <h2>Testing</h2>
 
@@ -448,6 +458,6 @@ GORAM with <b>STM32 Cube Programmer</b>.
 <a href="38_crc32.html">Next</a>, I will add integrity check at startup by
 doing CRC32 validation of the code.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

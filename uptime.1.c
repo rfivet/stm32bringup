@@ -1,5 +1,5 @@
 /* uptime.1.c -- tells how long the system has been running
-** Copyright (c) 2020 Renaud Fivet
+** Copyright (c) 2020-2023 Renaud Fivet
 **
 ** v1 displays the number of seconds elapsed since boot
 */
@@ -19,7 +19,7 @@ void kputu( unsigned u) {
 }
 
 int main( void) {
-    static unsigned last ;
+    unsigned last = 0 ;
 
     for( ;;)
         if( last != uptime) {

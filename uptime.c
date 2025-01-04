@@ -1,5 +1,5 @@
 /* uptime.c -- tells how long the system has been running   */
-/* Copyright (c) 2020 Renaud Fivet                          */
+/* Copyright (c) 2020-2023 Renaud Fivet                     */
 
 #include <stdio.h>
 #include "system.h" /* uptime, yield() */

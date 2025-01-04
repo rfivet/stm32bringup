@@ -71,7 +71,7 @@ void kputu( unsigned u) {
 }
 
 int main( void) {
-    static unsigned last ;
+    unsigned last = 0 ;
 
     for( ;;)
         if( last != uptime) {

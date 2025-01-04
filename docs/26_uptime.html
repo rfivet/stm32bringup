@@ -195,7 +195,7 @@ static void display( unsigned u, const char *s) {
 }
 
 int main( void) {
-    static unsigned last ;
+    unsigned last = 0 ;
 
     for( ;;)
         if( last != uptime) {
@@ -284,7 +284,7 @@ The build now complete successfully.
 $ make
 f030f4.elf
    text    data     bss     dec     hex filename
-   1325       0      12    1337     539 f030f4.elf
+   1317       0       8    1325     52d f030f4.elf
 f030f4.hex
 f030f4.bin
 </pre>
