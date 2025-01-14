@@ -120,9 +120,11 @@ CRC32SIGN := 1
 #SRCS = startup.txeie.c gpioa.c dht11main.c dht11.c
 #SRCS = startup.txeie.c gpioa.c ds18b20main.c ds18b20.c
 #SRCS = startup.txeie.c adc.c adcmain.c
-#SRCS = startup.txeie.c adc.c adccalib.c ds18b20.c
+##SRCS = startup.txeie.c adc.c adccalib.c ds18b20.c
 #SRCS = startup.ram.c txeie.c uptime.1.c
- SRCS = startup.crc.c txeie.c uptime.1.c
+#SRCS = startup.crc.c txeie.c uptime.c
+ SRCS = startup.crc.c adc.c adcmain.c
+
 LIBSRCS = printf.c putchar.c puts.c # memset.c memcpy.c
 ALLSRCS = $(SRCS) $(LIBSRCS)
 
@@ -134,7 +136,7 @@ ifdef CRC32SIGN
  CDEFINES += -DCRC32SIGN=$(CRC32SIGN)
 endif
 WARNINGS=-pedantic -Wall -Wextra -Wstrict-prototypes
-CFLAGS = $(CPU) -g $(WARNINGS) -Os $(CDEFINES)
+CFLAGS = -std=c2x $(CPU) -g $(WARNINGS) -Os $(CDEFINES)
 
 LD_SCRIPT = generic.ld
 ifdef FLASHSTART
@@ -150,7 +152,7 @@ LDFLAGS =-Wl,$(subst $(space),$(comma),$(LDOPTS))
 
 .PHONY: clean all version
 
-all: $(PROJECT).$(BINLOC).bin $(PROJECT).hex
+all: $(PROJECT).hex $(PROJECT).$(BINLOC).bin
 
 version:
 	@echo make $(MAKE_VERSION) $(MAKE_HOST)
@@ -169,7 +171,7 @@ ledtick.elf: ledtick.o
 cstartup.elf: cstartup.o
 
 %.elf:
-	@echo $@
+	@echo $@ from $+
 	$(CC) $(CPU) -T$(LD_SCRIPT) $(LDFLAGS) -nostartfiles -o $@ $+
 	$(SIZE) $@
 	$(OBJDUMP) -hS $@ > $(subst .elf,.lst,$@)
@@ -186,13 +188,14 @@ ifdef CRC32SIGN
 	mv signed.bin $@
 
 %.hex: %.$(BINLOC).bin
-	@echo $@
+	@echo $@ from $<
 	$(OBJCOPY) --change-address=$(BINLOC) -I binary -O ihex $< $@
-endif
+else
 
 %.hex: %.elf
-	@echo $@
+	@echo $@ from $<
 	$(OBJCOPY) -O ihex $< $@
+endif
 
 libstm32.a: $(LIBSRCS:.c=.o)
 	$(AR) rc $@ $?

@@ -196,59 +196,66 @@ ifdef CRC32SIGN
     mv signed.bin $@
 
 %.hex: %.$(BINLOC).bin
-    @echo $@
+    @echo $@ from $<
     $(OBJCOPY) --change-address=$(BINLOC) -I binary -O ihex $< $@
+else
+
+%.hex: %.elf
+    @echo $@ from $<
+    $(OBJCOPY) -O ihex $< $@
 endif
+
+
 </pre>
 
 <h2>Building and testing</h2>
 
 If I build an executable, I can see that the binary file is CRC-32
-signed. In the example below, the CRC-32 signature is 0xBC689506 and the
-total binary image is 2680 bytes long.
+signed. In the example below, the CRC-32 signature is 0xDEAD68BE and the
+total binary image is 1728 bytes long.
 
 <pre>
 $ make
-f030f4.elf
+f030f4.elf from startup.crc.o txeie.o uptime.o libstm32.a
 Memory region         Used Size  Region Size  %age Used
-           FLASH:        2680 B        16 KB     16.36%
-             RAM:          24 B         4 KB      0.59%
+           FLASH:        1728 B        16 KB     10.55%
+             RAM:          16 B         4 KB      0.39%
    text    data     bss     dec     hex filename
-   2673       4      20    2697     a89 f030f4.elf
+   1725       0      16    1741     6cd f030f4.elf
 f030f4.0x08000000.bin
 crc32/sign32 f030f4.0x08000000.bin
-BC689506 f030f4.0x08000000.bin: 2676, signed.bin: 2680
+DEAD68BE f030f4.0x08000000.bin: 1724, signed.bin: 1728
 mv signed.bin f030f4.0x08000000.bin
-f030f4.hex
+f030f4.hex from f030f4.0x08000000.bin
 </pre>
 
 I can double check that the value at the end of the binary file matches.
 
 <pre>
 $ hexdump -C f030f4.0x08000000.bin | tail
-000009f0  01 46 63 46 52 41 5b 10  10 46 01 d3 40 42 00 2b  |.FcFRA[..F..@B.+|
-00000a00  00 d5 49 42 70 47 63 46  5b 10 00 d3 40 42 01 b5  |..IBpGcF[...@B..|
-00000a10  00 20 00 f0 05 f8 02 bd  00 29 f8 d0 16 e7 70 47  |. .......)....pG|
-00000a20  70 47 c0 46 50 4c 4c 48  53 49 0a 00 20 25 64 20  |pG.FPLLHSI.. %d |
-00000a30  25 73 25 73 00 75 70 00  77 65 65 6b 00 64 61 79  |%s%s.up.week.day|
-00000a40  00 68 6f 75 72 00 6d 69  6e 75 74 65 00 73 65 63  |.hour.minute.sec|
-00000a50  6f 6e 64 00 30 31 32 33  34 35 36 37 38 39 41 42  |ond.0123456789AB|
-00000a60  43 44 45 46 00 00 20 2b  2b 10 0a 02 08 00 00 00  |CDEF.. ++.......|
-00000a70  ef 00 00 00 06 95 68 bc                           |......h.|
-00000a78
+00000630  8b 42 01 d3 cb 00 c0 1a  52 41 83 08 8b 42 01 d3  |.B......RA...B..|
+00000640  8b 00 c0 1a 52 41 43 08  8b 42 01 d3 4b 00 c0 1a  |....RAC..B..K...|
+00000650  52 41 41 1a 00 d2 01 46  52 41 10 46 70 47 ff e7  |RAA....FRA.FpG..|
+00000660  01 b5 00 20 00 f0 06 f8  02 bd c0 46 00 29 f7 d0  |... .......F.)..|
+00000670  76 e7 70 47 70 47 c0 46  50 4c 4c 48 53 45 0a 00  |v.pGpG.FPLLHSE..|
+00000680  20 25 64 20 25 73 25 73  00 75 70 00 77 65 65 6b  | %d %s%s.up.week|
+00000690  00 64 61 79 00 68 6f 75  72 00 6d 69 6e 75 74 65  |.day.hour.minute|
+000006a0  00 73 65 63 6f 6e 64 00  30 31 32 33 34 35 36 37  |.second.01234567|
+000006b0  38 39 41 42 43 44 45 46  00 00 00 00 be 68 ad de  |89ABCDEF.....h..|
+000006c0
 </pre>
 
 I can flash the resulting intel hex file and see that it executes.
 
 <pre>
-$ stm32flash -x f030f4.hex COM3
-stm32flash 0.6-patch-hex
+$ stm32flash -x f030f4.hex COM6
+stm32flash 0.7-patch-exe
 
 http://stm32flash.sourceforge.net/
 
 Using Parser : Intel HEX
 Location     : 0x8000000
-Size         : 2680
+Size         : 1728
 Interface serial_w32: 57600 8E1
 Version      : 0x31
 Option 1     : 0x00
@@ -260,18 +267,18 @@ Device ID    : 0x0444 (STM32F03xx4/6)
 - System RAM : 3KiB
 Write to memory
 Erasing memory
-Wrote address 0x08000a78 (100.00%) Done.
+Wrote address 0x080006c0 (100.00%) Done.
 
 Starting execution at address 0x08000000... done.
 </pre>
 
-I can use stm32flash to compute the CRC-32 checksum on the first 2680
-bytes of FLASH, the result is 0 as this covers both the payload AND
+I can use <b><i>stm32flash</i></b> to compute the CRC-32 checksum on the first
+1728 bytes of FLASH, the result is 0 as this covers both the payload AND
 the CRC-32 checksum value.
 
 <pre>
-$ stm32flash -C -S 0x08000000:2680 COM3
-stm32flash 0.6-patch-hex
+$ stm32flash -C -S 0x08000000:1728 COM6
+stm32flash 0.7-patch-exe
 
 http://stm32flash.sourceforge.net/
 
@@ -285,17 +292,17 @@ Device ID    : 0x0444 (STM32F03xx4/6)
 - Option RAM : 16b
 - System RAM : 3KiB
 CRC computation
-CRC address 0x08000a78 (100.00%) Done.
-CRC(0x08000000-0x08000a78) = 0x00000000
+CRC address 0x080006c0 (100.00%) Done.
+CRC(0x08000000-0x080006c0) = 0x00000000
 </pre>
 
-If I ask stm32flash to compute the CRC-32 checksum on the first 2676
-bytes (payload excluding CRC-32 checksum value), it returns 0xbc689506,
+If I ask <b><i>stm32flash</i></b> to compute the CRC-32 checksum on the first
+1724 bytes (payload excluding CRC-32 checksum value), it returns 0xdead68be,
 which is the value computed at build time.
 
 <pre>
-$ stm32flash -C -S 0x08000000:2676 COM3
-stm32flash 0.6-patch-hex
+$ stm32flash -C -S 0x08000000:1724 COM6
+stm32flash 0.7-patch-exe
 
 http://stm32flash.sourceforge.net/
 
@@ -309,25 +316,27 @@ Device ID    : 0x0444 (STM32F03xx4/6)
 - Option RAM : 16b
 - System RAM : 3KiB
 CRC computation
-CRC address 0x08000a74 (100.00%) Done.
-CRC(0x08000000-0x08000a74) = 0xbc689506
+CRC address 0x080006bc (100.00%) Done.
+CRC(0x08000000-0x080006bc) = 0xdead68be
 </pre>
 
 Because STM32F030 USART bootloader is v3.1, it doesn't implement the CRC
 checksum command included in v3.3. This means that in this case
-stm32flash computes the CRC checksum value on its own. You can check the
-sources of stm32flash for its implementation of the CRC-32 calculation.
+<b><i>stm32flash</i></b> computes the CRC checksum value on its own. You can
+check the sources of <b><i>stm32flash</i></b> for its implementation of the
+CRC-32 calculation.
 
 <h2>Checkpoint</h2>
 
-There is variation in the functionality of the CRC calculation unit
+There is variations in the functionality of the CRC calculation unit
 among different STM32 chipset family. The <code>check_flash()</code>
-implementation I just made relying on the default settings for polynomial,
-initial value, polynomial length and shift direction should be common.
+implementation I just made relies on the default settings for polynomial,
+initial value, polynomial length and shift direction. This should be common to
+most chipset.
 <p>
 <a href="39_resistor.html">Next</a>, I will use the ADC to read a resistor
 value.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

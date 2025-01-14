@@ -1,5 +1,5 @@
 /* uptime.c -- tells how long the system has been running   */
-/* Copyright (c) 2020-2023 Renaud Fivet                     */
+/* Copyright (c) 2020-2025 Renaud Fivet                     */
 
 #include <stdio.h>
 #include "system.h" /* uptime, yield() */
@@ -10,7 +10,7 @@ static void display( unsigned u, const char *s) {
 }
 
 int main( void) {
-    static unsigned last ;
+    unsigned last = 0 ;
 
     for( ;;)
         if( last != uptime) {
