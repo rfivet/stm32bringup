@@ -15,44 +15,113 @@ potentiometers, sliders, joysticks …
 
 <h2>Voltage Divider Circuit</h2>
 
-<img alt="Voltage Divider Circuit" src="img/39_vdivider.png">
-<p>
-<b>Vout = Vin * Rref / (Rref + Rmeasured)</b>
+Reading a resistor value is based on the voltage divider circuit.<br>
+
+<img alt="Voltage Divider Circuit" src="img/39_vdivider.png"><br>
+The relationship between the two voltages, <b>Vin</b> and <b>Vout</b> is
+<b><pre>
+ Vout         Vin
+────── = ──────────────
+ Rref     Rref + Rmeas
+</pre></b>
 
 <h2>ADC Readings</h2>
 
 Assuming the ADC is configured for 12 bit precision and return a value
-in the range [0 … 4095]
-<p>
-<b>Vout = VADC = VDDA * ADCRAW / 4095</b>
-<p>
-<b>Vin = VDDA</b>
-<p>
-<b>~VDDA~ * ADCRAW / 4095 = ~VDDA~ * Rref / (Rref + Rmeasured)</b>
-<p>
-<b>ADCRAW * Rmeasured = Rref * (4095 – ADCRAW)</b>
-<p>
-<b>Rmeasured = Rref * (4095 – ADCRAW) / ADCRAW</b>
-<p>
-<b>Rmeasured = Rref * (4095 / ADCRAW – 1)</b>
+in the range [0 … 4095], I can express the two voltages in terms of ADC values.
+<br>
+&nbsp;<b>Vout = VADC = VDDA * ADCraw / 4095</b><br>
+&nbsp;<b>Vin = VDDA</b>
+<p>The voltage divider relationship now becomes<br>
+&nbsp;<b><i>VDDA</i> * ADCraw / 4095 = <i>VDDA</i> * Rref / (Rref + Rmeasured)</b>
+<p>which can be further simplified as<br>
+&nbsp;<b>ADCraw * Rmeasured = Rref * (4095 – ADCraw)</b>
+<p>The resistor value is then given by<br>
+&nbsp;<b>Rmeasured = Rref * (4095 – ADCraw) / ADCraw</b><br>
+or<br>
+&nbsp;<b>Rmeasured = Rref * (4095 / ADCraw – 1)</b>
 
 <h2>Devil in the whatnots</h2>
+Some of the things to pay attention to while coding
 <ul>
 <li> Avoiding division by zero.
-
 <li> Integer versus floating point calculation.
-
 <li> Choosing the reference resistor.
-
 <li> Calibration of the reference resistor.
 </ul>
+<h3>● Division by Zero</h3>
+In the case where ADC readings would return 0, I chose to return INT_MAX as
+a value to flag the error.
 <pre>
 #include &lt;limits.h>
 int R = ADCraw ? Rref * (4095 / ADCraw - 1) : INT_MAX ;
 </pre>
 
+<h3>● Integer Calculation</h3>
+As integer based calculation tends to round intermediary results, I use the
+developped formula
 <pre>int R = ADCraw ? Rref * 4095 / ADCraw - Rref : INT_MAX ;</pre>
 
-    <hr>© 2020-2024 Renaud Fivet
+<h3>● Reference Resistor Selection</h3>
+The pair of resistors, reference and measured, has to be selected according
+to the use case. For now I am experimenting with the measurement of a
+photoresistor and use a reference resistor of 10 kOhm.
+
+<h3>● Calibration</h3>
+For resistor reading, the reference voltage value VDDA does not influence the
+calculation. From a hardware design point of view, having a stable reference
+voltage still remains a key factor in securing reliable ADC readings.<br>
+For precise resistor value reading, the calibration of the reference resistor
+will be key. In other cases, the raw ADC reading can be used in combination
+with dynamic range acquisition.
+
+<h2>Sampling Code</h2>
+
+I create <b>adcext.c</b> to take readings every second.
+
+<pre>
+#include &lt;limits.h>
+#include &lt;stdio.h>
+#include "system.h"	/* uptime, yield(), adc_init(), adc_convert() */
+
+#define RREF 10010  /* Rref is 10kOhm, measured @ 10.01 kOhm */
+
+int main( void) {
+    unsigned last = 0 ;
+    const unsigned short *calp ;        /* TS_CAL, VREFINT_CAL */
+
+/* Initialize ADC and fetch calibration values */
+    calp = adc_init( 2 | (1 << 17)) ;   /* ADC read on GPIOA1 and VREF */
+    short Vcal = calp[ 1] ;             /* VREFINT_CAL */
+
+    printf( "factory calibration: %u, %u, %u\n", calp[ 1], calp[ 0], calp[5]) ;
+
+    for( ;;)
+        if( uptime == last)
+            yield() ;
+        else {
+            short Rsample, Vsample ;
+
+            last = uptime ;
+            Vsample = adc_convert() ;
+            Rsample = adc_convert() ;
+            printf( "%i, %i, %i, ", Vcal, Vsample, Rsample) ;
+            int res = Rsample ? RREF * 4095 / Rsample - RREF : INT_MAX ;
+            Vsample = 3300 * Vcal / Vsample ;
+            printf( "%i, %i.%i\n", res, Vsample / 1000, Vsample % 1000) ;
+        }
+}
+</pre>
+
+I add the composition in <b>Makefile</b>
+
+<pre>SRCS = startup.crc.c adc.c adcext.c</pre>
+
+<h2>Checkpoint</h2>
+<p>
+Building up on the previous ADC reading of internal sensors, sampling of
+an external resistor pair connected to one of the IO pin is straightforward.
+</p>
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

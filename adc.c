@@ -1,5 +1,5 @@
 /* adc.c -- system layer
-** Copyright (c) 2020-2021 Renaud Fivet
+** Copyright (c) 2020-2025 Renaud Fivet
 **
 ** ADC for temperature sensor and Vrefint
 ** gpioa low level API and usleep()
@@ -64,6 +64,8 @@
 #define RCC_APB2ENR_USART1EN    0x00004000  /* 14: USART1 clock enable */
 #define RCC_APB2ENR_ADCEN       0x00000200  /*  9: ADC clock enable */
 
+#define RCC_CFGR2               RCC[ 11]    /* 3-0: PLL PREDIV */
+
 #define RCC_CR2                 RCC[ 13]
 #define RCC_CR2_HSI14ON         0x00000001  /*  1: HSI14 clock enable */
 #define RCC_CR2_HSI14RDY        0x00000002  /*  2: HSI14 clock ready */
@@ -126,15 +128,20 @@
 #define LED_IOP A
 #define LED_PIN 4
 #define LED_ON  0
-/* 8MHz quartz, configure PLL at 28MHz */
+/* 8MHz quartz, configure PLL at 16MHz */
 //#define HSE     8000000
-#define PLL     7
+//#define HSEPRE  4
+#define PLL     6
 #define BAUD    9600
 //#define HSI14 1
 
 #ifdef PLL
 # ifdef HSE
-#  define CLOCK HSE / 2 * PLL
+#  ifdef HSEPRE
+#   define CLOCK HSE / HSEPRE * PLL
+#  else
+#   define CLOCK HSE / 2 * PLL
+#  endif
 # else /* HSI */
 #  define CLOCK 8000000 / 2 * PLL
 # endif
@@ -149,6 +156,12 @@
 
 #if CLOCK > 48000000
 # error clock frequency exceeds 48MHz
+#endif
+
+#if CLOCK > 0x1000000
+# define TICKDIV 8
+#else
+# define TICKDIV 1
 #endif
 
 #if CLOCK % BAUD
@@ -225,13 +238,11 @@ void SysTick_Handler( void) {
 }
 
 
-void usleep( unsigned usecs) {      /* wait at least usec µs */
-#if CLOCK / 8000000 < 1
-# error HCLK below 8 MHz
-#elif CLOCK % 8000000
-# warning HCLK is not multiple of 8 MHz
+void usleep( unsigned usecs) {      /* wait at least usecs µs */
+#if CLOCK % (TICKDIV * 1000000)
+# warning usleep() not accurate at that clock frequency
 #endif
-    usecs = SYSTICK_CVR - (CLOCK / 8000000 * usecs) ;
+    usecs = SYSTICK_CVR - (CLOCK / TICKDIV / 1000000 * usecs) ;
     while( SYSTICK_CVR > usecs) ;
 }
 
@@ -251,7 +262,7 @@ iolvl_t gpioa_read( int pin) {      /* Read level of GPIOA pin */
 }
 
 
-static void adc_init( void) {
+const unsigned short *adc_init( unsigned channels) {
 /* Enable ADC peripheral */
     RCC_APB2ENR |= RCC_APB2ENR_ADCEN ;
 /* Setup ADC sampling clock */
@@ -260,10 +271,11 @@ static void adc_init( void) {
     do {} while( !( RCC_CR2 & RCC_CR2_HSI14RDY)) ;  /* Wait for stable clock */
 /* Select HSI14 as sampling clock for ADC */
 //  ADC_CFGR2 &= ~ADC_CFGR2_CKMODE ;    /* Default 00 == HSI14 */
-#else
+#elif CLOCK <= 28000000
 /* Select PCLK/2 as sampling clock for ADC */
     ADC_CFGR2 |= ADC_CFGR2_PCLK2 ;          /* 01 PCLK/2 Over default 00 */
-//  ADC_CFGR2 |= ADC_CFGR2_PCLK4 ;          /* 10 PCLK/4 Over default 00 */
+#else
+    ADC_CFGR2 |= ADC_CFGR2_PCLK4 ;          /* 10 PCLK/4 Over default 00 */
 #endif
 
 /* Calibration */
@@ -276,15 +288,20 @@ static void adc_init( void) {
     } while( !( ADC_ISR & ADC_ISR_ADRDY)) ;
 
 /* Select inputs, precision and scan direction */
-    ADC_CHSELR = 3 << 16 ;  /* Channel 16: temperature, Channel 17: Vrefint */
-    ADC_SMPR = 7 ;
-    ADC_CCR |= ADC_CCR_TSEN | ADC_CCR_VREFEN ;
+    ADC_CHSELR = channels ;
+    ADC_SMPR = 7 ;              /* 7 is 239.5 ADC clock cycles */
+    ADC_CCR |= (channels & (1 << 17)) << 5 ;    /* VREFEN */
+    ADC_CCR |= (channels & (1 << 16)) << 7 ;    /* TSEN   */
+
 /* Default scan direction (00) is Temperature before Voltage */
 //  ADC_CFGR1 &= ~ADC_CFGR1_SCANDIR ;   /* Default 0 is low to high */
+    ADC_CFGR1 |= ADC_CFGR1_SCANDIR ;    /* high to low */
     ADC_CFGR1 |= ADC_CFGR1_DISCEN ;     /* Enable Discontinuous mode */
+
+    return TS_CAL1 ;
 }
 
-static unsigned adc_convert( void) {
+unsigned adc_convert( void) {
 /* Either only one channel in sequence or Discontinuous mode ON */
     ADC_CR |= ADC_CR_ADSTART ;              /* Start ADC conversion */
     do {} while( ADC_CR & ADC_CR_ADSTART) ; /* Wait for start command cleared */
@@ -293,7 +310,7 @@ static unsigned adc_convert( void) {
 
 void adc_vnt( vnt_cmd_t cmd, short *ptrV, short *ptrC) {
     if( cmd == VNT_INIT)
-        adc_init() ;
+        adc_init( 3 << 16) ;
 
     if( cmd <= VNT_CAL) {
     /* Calibration Values */
@@ -303,11 +320,11 @@ void adc_vnt( vnt_cmd_t cmd, short *ptrV, short *ptrC) {
     }
 
 /* ADC Conversion */
-    *ptrC = adc_convert() ;
     *ptrV = adc_convert() ;
+    *ptrC = adc_convert() ;
     
     if( cmd == VNT_VNC) {
-		*ptrC = 300 + (*TS_CAL1 - *ptrC * *VREFINT_CAL / *ptrV) * 10000 / 5336 ;
+        *ptrC = 300 + (*TS_CAL1 - *ptrC * *VREFINT_CAL / *ptrV) * 10000 / 5336 ;
         *ptrV = 330 * *VREFINT_CAL / *ptrV ;
     }
 }
@@ -326,11 +343,15 @@ int init( void) {
 #ifdef PLL
 /* Setup PLL HSx/2 * 6 [24MHz] */
     /* Default 0: PLL HSI/2 src, PLL MULL * 2 */
-    RCC_CFGR =
 # ifdef HSE
-                RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLXTPRE_DIV2 |
-# endif
+    RCC_CFGR  = RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLXTPRE_DIV2 |
                 RCC_CFGR_PLLMUL( PLL) ;
+#  ifdef HSEPRE
+    RCC_CFGR2 = HSEPRE - 1 ;
+#  endif
+# else
+    RCC_CFGR =  RCC_CFGR_PLLMUL( PLL) ;
+# endif
     RCC_CR |= RCC_CR_PLLON ;
     do {} while( (RCC_CR & RCC_CR_PLLRDY) == 0) ;   /* Wait for PLL */
 
@@ -349,9 +370,13 @@ int init( void) {
 #endif
 
 /* SYSTICK */
-    SYSTICK_RVR = CLOCK / 8 - 1 ;   /* HBA / 8 */
+    SYSTICK_RVR = CLOCK / TICKDIV - 1 ;   /* HCLK / [8,1] */
     SYSTICK_CVR = 0 ;
-    SYSTICK_CSR = 3 ;               /* HBA / 8, Interrupt ON, Enable */
+#if TICKDIV == 8
+    SYSTICK_CSR = 3 ;               /* HCLK / 8, Interrupt ON, Enable */
+#else
+    SYSTICK_CSR = 7 ;               /* HCLK, Interrupt ON, Enable */
+#endif
     /* SysTick_Handler will execute every 1s from now on */
 
 #ifdef LED_ON

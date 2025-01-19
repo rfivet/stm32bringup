@@ -30,5 +30,7 @@ typedef enum {
 } vnt_cmd_t ;
 
 void adc_vnt( vnt_cmd_t cmd, short *ptrV, short *ptrC) ;
+const unsigned short *adc_init( unsigned channels) ;
+unsigned adc_convert( void) ;
 
 /* end of system.h */

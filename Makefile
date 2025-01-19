@@ -123,7 +123,8 @@ CRC32SIGN := 1
 ##SRCS = startup.txeie.c adc.c adccalib.c ds18b20.c
 #SRCS = startup.ram.c txeie.c uptime.1.c
 #SRCS = startup.crc.c txeie.c uptime.c
- SRCS = startup.crc.c adc.c adcmain.c
+#SRCS = startup.crc.c adc.c adcmain.c
+ SRCS = startup.crc.c adc.c adcext.c
 
 LIBSRCS = printf.c putchar.c puts.c # memset.c memcpy.c
 ALLSRCS = $(SRCS) $(LIBSRCS)

@@ -39,7 +39,7 @@ The initialization steps:
 <li> Configure acquisition direction and mode.
 </ul>
 <pre>
-static void adc_init( void) {
+const unsigned short *adc_init( unsigned channels) {
 /* Enable ADC peripheral */
     RCC_APB2ENR |= RCC_APB2ENR_ADCEN ;
 /* Setup ADC sampling clock */
@@ -64,13 +64,16 @@ static void adc_init( void) {
     } while( !( ADC_ISR & ADC_ISR_ADRDY)) ;
 
 /* Select inputs and precision */
-    ADC_CHSELR = 3 << 16 ;  /* Channel 16: temperature, Channel 17: Vrefint */
-    ADC_CCR |= ADC_CCR_TSEN | ADC_CCR_VREFEN ;
+    ADC_CHSELR = channels ;
+    ADC_CCR |= (channels & (1 << 17)) << 5 ;    /* VREFEN */
+    ADC_CCR |= (channels & (1 << 16)) << 7 ;    /* TSEN   */
     ADC_SMPR = 7 ;
 /* Select acquisition direction and mode */
 /* Default scan direction (00) is Temperature before Voltage */
 //  ADC_CFGR1 &= ~ADC_CFGR1_SCANDIR ;   /* Default 0 is low to high */
     ADC_CFGR1 |= ADC_CFGR1_DISCEN ;     /* Enable Discontinuous mode */
+
+    return TS_CAL1 ;
 }
 </pre>
 
@@ -88,7 +91,7 @@ command, wait until completion and fetch the result in the ADC Data
 Register.
 
 <pre>
-static unsigned adc_convert( void) {
+unsigned adc_convert( void) {
 /* Either only one channel in sequence or Discontinuous mode ON */
     ADC_CR |= ADC_CR_ADSTART ;              /* Start ADC conversion */
     do {} while( ADC_CR & ADC_CR_ADSTART) ; /* Wait for start command cleared */
@@ -196,7 +199,7 @@ calibration value addresses and the following implementation of
 <pre>
 void adc_vnt( vnt_cmd_t cmd, short *ptrV, short *ptrC) {
     if( cmd == VNT_INIT)
-        adc_init() ;
+        adc_init( 3 << 16) ;	/* 17: V, 16: T */
 
     if( cmd <= VNT_CAL) {
     /* Calibration Values */
