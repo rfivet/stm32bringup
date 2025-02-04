@@ -196,13 +196,11 @@ And retest after the following modification.
     dht11_tempc = values[ 2] ;
     dht11_tempf = values[ 3] ;
     if( dht11_tempf & 0x80) {
-        dht11_tempc *= -1 ;
-        dht11_tempf = 10 - ( dht11_tempf & 0x7F) ;
-        if( dht11_tempf == 10) {
-            dht11_tempc -= 1 ;
-            dht11_tempf = 0 ;
-        }
+        dht11_tempc = -( dht11_tempc + 1) ;
+        dht11_tempf ^= 0x80 ;
     }
+    
+    dht11_deciC = dht11_tempc * 10 + dht11_tempf ;
 </pre>
 
 <h2>Stability</h2>
@@ -239,6 +237,6 @@ or how bad the measurements are.
 <a href="33_ds18b20.html">Next</a>, I will use another digital thermometer as a
 reference.
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>

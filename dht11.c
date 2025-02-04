@@ -1,5 +1,5 @@
 /* dht11.c -- DHT11 humidity and temperature sensor reading */
-/* Copyright (c) 2020-2021 Renaud Fivet                     */
+/* Copyright (c) 2020-2025 Renaud Fivet                     */
 
 #include "dht11.h"      /* implements DHT11 API */
 
@@ -25,7 +25,7 @@
 unsigned char dht11_humid ; /* 5 .. 95 %RH */
   signed char dht11_tempc ; /* -20 .. 60 C */
 unsigned char dht11_tempf ; /* .0 .. .9 C */
-
+int           dht11_deciC ; /* -200 .. 600 */
 
 void dht11_init( void) {
 /* At startup A13 is ALT DIO with Pull Up enabled */
@@ -79,14 +79,12 @@ dht11_retv_t dht11_read( void) {
     dht11_tempc = values[ 2] ;
     dht11_tempf = values[ 3] ;
     if( dht11_tempf & 0x80) {
-        dht11_tempc *= -1 ;
-        dht11_tempf = 10 - ( dht11_tempf & 0x7F) ;
-        if( dht11_tempf == 10) {
-            dht11_tempc -= 1 ;
-            dht11_tempf = 0 ;
-        }
+        dht11_tempc = -( dht11_tempc + 1) ;
+        dht11_tempf ^= 0x80 ;
     }
     
+    dht11_deciC = dht11_tempc * 10 + dht11_tempf ;
+
     return DHT11_SUCCESS ;
 }
 
