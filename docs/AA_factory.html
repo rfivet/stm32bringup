@@ -39,14 +39,15 @@ $ stm32flash -r - -S 0x1FFFF7a0:96 COM6 2>/dev/null | hexdump -C
 <pre>
 | BootID | X     | Y   | Wafer | Lot       | TS_CAL1 | VREFINT_CAL | TS_CAL2 | Flash | TBD     |
 |--------|-------|-----|-------|-----------|---------|-------------|---------|-------|---------|
-| x10    | x8014 | x20 | x13   | ‘W3R171 ‘ | x6CE    | x5F5        | x527    | 16    | hd&lt;?    |
+| x10    | x800A | x41 | x08   | ‘QMY687 ‘ | x6E6    | x5F1        | x53E    | 16    | hZE?    |
+| x10    | x800C | x18 | x01   | ‘QRR259 ‘ | x6E3    | x5F2        | x532    | 16    | h\E?    |
 | x10    | x8011 | x49 | x0E   | ‘W3U795 ‘ | x6D1    | x5F0        | x523    | 16    | hbF?    |
+| x10    | x8014 | x20 | x13   | ‘W3R171 ‘ | x6CE    | x5F5        | x527    | 16    | hd&lt;?    |
 | x10    | x8015 | x21 | x13   | ‘W4A195 ‘ | x6DA    | x5EE        | x52A    | 16    | h^D?    |
 | x10    | x1C   | x3A | x12   | ‘W4A820 ‘ | x6B9    | x5F6        | x511    | 16    | hR;?    |
 | x10    | x09   | x4D | x0B   | ‘W4C593 ‘ | x6E6    | x5F4        | x53C    | 16    | haG?    |
 | x10    | x1D   | x41 | x12   | ‘W4R342 ‘ | x6E4    | x5F1        | x535    | 16    | hZJ?    |
 | x10    | x10   | x17 | x05   | ‘WAA390 ‘ | x6E9    | x5F8        | x523    | 16    | hY=?    |
-| x10    | x800A | x41 | x08   | ‘QMY687 ‘ | x6E6    | x5F1        | x53E    | 16    | hZE?    |
 | x10    | xDDC1 |xDDC1| x0D   | ‘       ‘ | x703    | x5E9        | x535    | 32    | hNb\xFF |
 | x10    | xDDC1 |xDDC1| x0F   | ‘       ‘ | x70B    | x5EF        | x537    | 32    | hHX\xFF |
 | x10    | xDDC1 |xDDC1| x10   | ‘       ‘ | x6FE    | x5E9        | x539    | 32    | hZa\xFF |
@@ -55,6 +56,6 @@ $ stm32flash -r - -S 0x1FFFF7a0:96 COM6 2>/dev/null | hexdump -C
 | x21    | x41   | x1E | x12   | ‘SNG712 ‘ | x6EB    | x5F0        | x526    | 64    | hjS\xFF |
 </pre>
 
-    <hr>© 2020-2024 Renaud Fivet
+    <hr>© 2020-2025 Renaud Fivet
  </body>
 </html>
