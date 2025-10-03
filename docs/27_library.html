@@ -9,7 +9,7 @@
 <h1>2.7: C Library</h1>
 
 So far I have used three Standard C library functions for output:
-<code>printf()</code>, <code>putchar()</code> and <code>puts()</code>. It’s
+<code>printf()</code>, <code>putchar()</code> and <code>puts()</code>. It's
 time to bundle them as a library. This will give me more flexibility as I will
 not have to give a full list of the modules to link, the linker will handle
 the missing dependencies by looking into the libraries.
@@ -38,7 +38,7 @@ int puts( const char *s) {
 I need to tell <b>GNU make</b> how to manage and use the library, which
 means updating <b>Makefile</b> with the following informations:
 <p>
-What’s the name, the content and the rule to maintain the library:
+What's the name, the content and the rule to maintain the library:
 
 <pre>
 AR      = $(BINPFX)ar
@@ -63,7 +63,7 @@ $(PROJECT).elf: $(OBJS) lib$(LIBSTEM).a
     $(OBJDUMP) -hS $@ > $(PROJECT).lst
 </pre>
 
-Library modules are implicitly part of the composition, so it’s not
+Library modules are implicitly part of the composition, so it's not
 necessary to list them anymore.
 
 <pre>

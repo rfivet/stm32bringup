@@ -8,7 +8,7 @@
  <body>
 <h1>2.3 Hello There!</h1>
 
-Looking for a <i>“you had me at hello”</i> moment?&nbsp; Let’s see how serial
+Looking for a <i>“you had me at hello”</i> moment?&nbsp; Let's see how serial
 transmission works for you.
 
 <h2>Implementation</h2>
@@ -55,11 +55,11 @@ To check if it is ready for transmission you must check the state of the
 TX Empty (<b>TXE</b>) bit in the Interrupt & Status Register (<b>ISR</b>).
 <p>
 I write a basic <code>kputc()</code> function that does busy waiting if the
-<b>TDR</b> is not empty and insures that LF are mapped to CR LF. The ‘k’ in
-kputc refer to ‘kernel’, as kputc is a low level function that will be used
+<b>TDR</b> is not empty and insures that LF are mapped to CR LF. The 'k' in
+kputc refer to 'kernel', as kputc is a low level function that will be used
 mostly for debugging. With the busy wait and the recursive code this
-implementation is definitively not optimal, but it’s functional and
-that’s what matter most at this stage.
+implementation is definitively not optimal, but it's functional and
+that's what matter most at this stage.
 
 <pre>
 void kputc( unsigned char c) {
@@ -131,8 +131,8 @@ as usual but I can see the RX LED on the USB to UART adapter flash
 briefly when I release the reset button.
 <p>
 On Windows PC, if I use PuTTY or Arduino IDE to open <b>COM4</b> at 9600
-baud, every time I press and release the reset button I can see ‘hello,
-world’ displayed on a new line in the terminal window.
+baud, every time I press and release the reset button I can see 'hello, world'
+displayed on a new line in the terminal window.
 <p>
 On Linux, when I plug in the USB to UART adapter, it enumerates as
 <b>/dev/ttyUSB0</b>, so it is compatible with the USB driver for serial
@@ -144,7 +144,7 @@ writing.
 
 Once added to <b>dialout</b>, I can open <b>/dev/ttyUSB0</b> at 9600 baud in
 Arduino IDE, each time I press and release the board RESET button, I can see
-‘hello, world’ displayed on a new line in the Serial Monitor window.
+'hello, world' displayed on a new line in the Serial Monitor window.
 
 <h2>Checkpoint</h2>
 

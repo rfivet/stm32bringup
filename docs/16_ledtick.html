@@ -8,12 +8,12 @@
  <body>
 <h1>1.6 The Tick</h1>
 
-<img alt="It’s blue! It blinks! It’s the Tick!" src="img/16_tick.png">
+<img alt="It's blue! It blinks! It's the Tick!" src="img/16_tick.png">
 <p>
 In previous iteration, I made the user LED blink using an active delay
 loop. I have two issues with this implementation:
 <ul>
-<li> It’s hard to control the delay timing accurately
+<li> It's hard to control the delay timing accurately
 </ul><ul>
 <li> Active loops are not cool
 </ul>
@@ -34,7 +34,7 @@ while( enabled) {
 }
 </pre>
 
-It’s an auto decremented counter that reloads and sets a flag when
+It's an auto decremented counter that reloads and sets a flag when
 reaching zero. It can trigger a system interrupt if requested to. Its
 default clock is the processor clock and can be switched to external
 clock. Details can be found in the Programming Manual as this is part of
@@ -50,7 +50,7 @@ from <b>Reset_Handler</b> to <b>SysTick_Handler</b>.
 </ul><ul>
 <li> Introduce the <b>SysTick</b> core peripheral to the compiler, using
 pre-processor macroes to give the location of SysTick registers. As this
-is a core peripheral, it’s in a different address space than the
+is a core peripheral, it's in a different address space than the
 peripherals I have seen so far.
 </ul><ul>
 <li> Start the <b>Reset_Handler</b> by initializing and enabling the System
@@ -126,7 +126,7 @@ void SysTick_Handler( void) {
 }
 </pre>
 
-I didn’t initialize the GPIO B before enabling the SysTick as I have a
+I didn't initialize the GPIO B before enabling the SysTick as I have a
 whole second before the first interrupt will tick in.
 <p>
 Build is straightforward.

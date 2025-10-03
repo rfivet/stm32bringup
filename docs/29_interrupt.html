@@ -8,7 +8,7 @@
  <body>
 <h1>2.9 Interrupt Driven Transmission</h1>
 
-It’s time to revise the implementation of <code>kputc()</code>, remove the
+It's time to revise the implementation of <code>kputc()</code>, remove the
 recursive call to handle CR LF transmission and avoid the busy wait
 loop. USART1 can trigger an interrupt when the Transmit Data Register
 (<b>TDR</b>) is empty which is all I need to implement interrupt driven
@@ -128,7 +128,7 @@ Configuration Register of USART1:
 <pre>#define USART_CR1_TXEIE (1 << 7)    /* 7: TDR Empty Interrupt Enable */</pre>
 
 I use a Round Robin buffer to synchronize <code>kputc()</code> and
-<code>USART1_Handler()</code> making sure they don’t write to the same location.
+<code>USART1_Handler()</code> making sure they don't write to the same location.
 
 <pre>
 static unsigned char txbuf[ 8] ; // best if size is a power of 2 for cortex-M0
@@ -141,11 +141,11 @@ static volatile unsigned char   txbufout ;
 <code>USART1_Handler()</code> only read from it.
 
 <li> <code>txbufin</code> is the index of the position where
-<code>kputc()</code> will insert a character, it’s written by
+<code>kputc()</code> will insert a character, it's written by
 <code>kputc()</code> and read by <code>USART1_Handler()</code>.
 
 <li> <code>txbufout</code> is the index of the position where
-<code>USART1_Handler()</code> will fetch a character, it’s written by
+<code>USART1_Handler()</code> will fetch a character, it's written by
 <code>USART1_Handler()</code> and read by <code>kputc()</code>. The value of
 <code>txbufout</code> will change under interrupt, so it is marked as
 <code>volatile</code> to make sure the compiler will not optimize the code in a
@@ -260,7 +260,7 @@ to hold lastc (1 byte). The new version uses 12 bytes to hold the round robin
 buffer (8 bytes), its in and out indexes (2 bytes) and lastc (1 byte).
 
 <li> The compiler optimizes the modulo instruction in <code>% size</code> to
-bit masking <code>& (size – 1)</code> as the size 8 is a power of 2.
+bit masking <code>& (size - 1)</code> as the size 8 is a power of 2.
 </ul>
 Flashing a device with the new executable, <b>uptime</b> works as the previous
 version.

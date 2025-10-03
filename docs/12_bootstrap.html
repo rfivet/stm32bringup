@@ -73,7 +73,7 @@ SECTIONS
 From this snippet I can see that not only flash and ram parameters but also
 the entry point for code execution, <b>Reset_Handler</b>, needs to be provided.
 <p>
-As a check, let’s change the link script to <b>nokeep.ld</b> in <b>Makefile</b>
+As a check, let's change the link script to <b>nokeep.ld</b> in <b>Makefile</b>
 and generate an executable <b>.elf</b> from the empty source code file
 <b>empty.c</b>:
 
@@ -92,7 +92,7 @@ rm empty.o
 
 The linker gives a warning and fallback on a default address as entry point.
 <p>
-So let’s create <b>boot.c</b> with an idle loop as <b>Reset_Handler</b>:
+So let's create <b>boot.c</b> with an idle loop as <b>Reset_Handler</b>:
 <pre>
 void Reset_Handler( void) {
     for( ;;) ;

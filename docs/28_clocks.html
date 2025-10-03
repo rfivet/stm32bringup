@@ -9,7 +9,7 @@
 <h1>2.8 Baud Rate and Clocks</h1>
 
 <blockquote> “The time has come,” the walrus said, “to talk of many things: Of baud
-  rates – and clocks – and quartz.”<br>
+  rates - and clocks - and quartz.”<br>
   -- Les huit scaroles --
 </blockquote>
 
@@ -20,7 +20,7 @@ so how fast is that?
 
 <h2>A bit of theory</h2>
 
-Let’s interpret asynchronous serial transmission, 9600 baud, 8 bits, no
+Let's interpret asynchronous serial transmission, 9600 baud, 8 bits, no
 parity, 1 stop bit.
 <ul>
 <li> Serial transmission means transmission on one wire, with each bit sent
@@ -40,17 +40,17 @@ the change in the wire state.
 </ul>
 In my case, <b>8N1</b> means that, because of the framing pattern, for
 every byte of data sent, there is one extra start bit and one extra stop
-bit sent, it’s ten bits per byte of data. At 9600 bauds that means 960
-bytes per second, fast enough to transmit every characters of a 80×24
+bit sent, it's ten bits per byte of data. At 9600 bauds that means 960
+bytes per second, fast enough to transmit every characters of a 80x24
 terminal screen in two seconds.
 
 <h2>Baud rate accuracy</h2>
 
 It sounds like a pretty robust transmission scheme, sampling at 16 times
-the transmission clock isn’t call oversampling for nothing. Am I
+the transmission clock isn't call oversampling for nothing. Am I
 overdoing something here or just compensating for something I missed?
 <p>
-The thing is, I didn’t program USART1 to transmit at 9600 baud. As my
+The thing is, I didn't program USART1 to transmit at 9600 baud. As my
 default clock is 8MHz, I had to write in USART1 baud rate register a
 value close to 8000000/9600 or 2500/3, 833 is close enough but my actual
 transmission speed is closer to 9604, slightly faster than 9600 baud.
@@ -62,7 +62,7 @@ want to work at higher baud rate.
 
 <h2>Clocks</h2>
 
-Looking at the clock tree in the datasheet can be intimidating, it’s
+Looking at the clock tree in the datasheet can be intimidating, it's
 definitively about several clocks.
 <p>
 <img alt="Clock Tree" src="img/28_clocktree.png">
@@ -115,7 +115,7 @@ I will use 24 MHz.
 <h2>Quartz</h2>
 
 I can also activate the quartz if there is one soldered on the board.
-It’s usually the case but specially for STM32F030F4 which has only 20
+It's usually the case but specially for STM32F030F4 which has only 20
 pins, a quartz less design that free up two GPIO pins can be a day
 saver. Quartz value from 4 to 32 MHz are supported and most design use 8
 MHz.

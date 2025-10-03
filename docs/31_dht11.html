@@ -11,7 +11,7 @@
 The DHT11 is a low cost humidity and temperature sensor from Aosong
 which is easy to buy online. It is not popular as it has a non standard
 communication protocol and its precision is ±5% for humidity and ±2°C
-for temperature so it’s often overlooked for more expensive solution.
+for temperature so it's often overlooked for more expensive solution.
 
 <h2>Hardware consideration</h2>
 
@@ -142,11 +142,11 @@ iolvl_t gpioa_read( int pin) {      /* Read level of GPIOA pin */
 }
 </pre>
 
-I didn’t use the GPIO Input Data Register (<b>IDR</b>) until now, so I add it
+I didn't use the GPIO Input Data Register (<b>IDR</b>) until now, so I add it
 to the registers description.
 <p>
 <code>gpioa_output()</code> implementation is minimal. I know I am switching
-only between input and output mode, so I don’t need to mask the bit field
+only between input and output mode, so I don't need to mask the bit field
 first.
 <p>
 I use the System Tick to implement <code>usleep()</code>.
@@ -165,7 +165,7 @@ The System Tick generates an interrupt every second but I can read the
 Current Value Register (<b>CVR</b>) to pause for smaller time period.
 <p>
 As I will read the sensor just after a new second count, I know that the
-<b>CVR</b> value is close to maximum and I don’t need to care for a roll
+<b>CVR</b> value is close to maximum and I don't need to care for a roll
 over.
 <p>
 SysTick input clock is <b>HCLK/8</b>, this implementation will work for
@@ -331,7 +331,7 @@ can measure 80µs in retries unit. This is all I need to calibrate the timing
 measurement.
 <p>
 I can do this calibration every time the DHT11 starts transmission, this
-way I don’t need to update some constant if I change the frequency of my
+way I don't need to update some constant if I change the frequency of my
 system clock.
 
 <pre>
@@ -418,7 +418,7 @@ two seconds.
 <p>
 <img alt="DHT11 output" src="img/31_output.png">
 <p>
-The humidity value seems off the mark. So I need to investigate what’s
+The humidity value seems off the mark. So I need to investigate what's
 the issue.
 
 <h2>Checkpoint</h2>

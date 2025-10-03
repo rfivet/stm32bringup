@@ -8,7 +8,7 @@
  <body>
 <h1>2.6 uptime</h1>
 
-It’s time to throw away the prototype and write a production version of
+It's time to throw away the prototype and write a production version of
 <code>uptime</code>. There is several things I want to straighten up in
 <b>uptime.1.c</b>:
 <ul>
@@ -50,13 +50,13 @@ Next, I make a revision of <b>uplow.1.c</b> by making a copy into
 I include <b>system.h</b> which is the interface that <b>uplow.2.c</b>
 implements. I will have several implementations of the same interface,
 so <b>system.h</b> is not just the interface published by <b>uplow.2.c</b>,
-it’s <b>uplow.2.c</b> which is an implementation of <b>system.h</b>.
+it's <b>uplow.2.c</b> which is an implementation of <b>system.h</b>.
 
 <pre>
 #include "system.h" /* implements system.h */
 </pre>
 
-I extract the code for <b>puts()</b> as it is a library function that doesn’t
+I extract the code for <b>puts()</b> as it is a library function that doesn't
 really belong to the system.
 <p>
 I add the implementation of <b>kputs()</b> and <b>yield()</b>.
@@ -90,7 +90,7 @@ version by adding characters at the beginning of a string.
 
 <li> <code>kputu()</code> takes one additional divider parameter, so it can be
 used to print unsigned integer in various format like octal, decimal and
-hexadecimal. Current implementation will work for base 8 to 16, it won’t
+hexadecimal. Current implementation will work for base 8 to 16, it won't
 work for binary or base 36.
 
 <li> <code>kputi()</code> outputs signed integer.
@@ -256,7 +256,7 @@ The linker found a reference to <code>putchar()</code> at line 41 of
             printf( "\n") ;
 </pre>
 
-I haven’t used <code>putchar()</code> in my code and line 41 is a
+I haven't used <code>putchar()</code> in my code and line 41 is a
 <code>printf( "\n")</code> that can be optimized to a
 <code>putchar( '\n')</code>. This must be some high level C optimization of gcc.
 <p>
@@ -324,7 +324,7 @@ I flash the board and start execution, the output works as expected.
 <img alt="uptime" src="img/26_uptime.png">
 <p>
 It will take a while to see the days and weeks counts appear, so I will
-need to power the board independently from it’s serial interface. For
+need to power the board independently from its serial interface. For
 test purpose I fast forward the execution by using a bigger value for
 the increment of <code>uptime</code> in <code>SysTick_handler()</code>.
 
@@ -332,11 +332,11 @@ the increment of <code>uptime</code> in <code>SysTick_handler()</code>.
 
 Rereading the code while writing this web page, I found a typo in the
 week calculation. After that I retested with a bigger time increment to
-make sure days and weeks values are correct. It’s also clear that the
+make sure days and weeks values are correct. It's also clear that the
 test coverage for the printf format interpreter is not sufficient as I have
 coded more than is necessary to implement <b>uptime</b>.
 <p>
-I didn’t expect gcc to optimize calls to high level C functions,
+I didn't expect gcc to optimize calls to high level C functions,
 replacing some <code>printf()</code> by <code>putchar()</code>, thus forcing me
 to write additional code. So far I am not concerned by execution speed, so this
 type of optimization is a bit counter productive.

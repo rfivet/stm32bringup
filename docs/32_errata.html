@@ -9,7 +9,7 @@
 <h1>3.2 DHT11 Errata</h2>
 
 I only did basic testing so far, checking that the values read were
-displayed properly. But the humidity values didn’t seem correct, so I
+displayed properly. But the humidity values didn't seem correct, so I
 need to do some extra verifications. There are many possible causes and
 they can combine, bugs like humans are social animals, when you find
 one, look for its mates.
@@ -55,7 +55,7 @@ the previous version v1.3 branded AOSONG which seems identical except a
 revision page.
 <p>
 I also have an English Aosong DHT11 datasheet that seems outdated.
-Aosong doesn’t seem to allow redistribution of their datasheet so most
+Aosong doesn't seem to allow redistribution of their datasheet so most
 online vendor have made their own based on that English version.
 <p>
 The English datasheet states the temperature range as 0~50℃, the
@@ -80,7 +80,7 @@ around 25~26%RH. As I have changed both interval and setup time, I need
 confirm that it is the interval time that matters.
 <p>
 With intervals of 5 and 6 seconds, the reading jumps above 37%RH. So
-it’s clearly a problem with the interval.
+it's clearly a problem with the interval.
 <p>
 I want to make a round number of samples per minute, so I need retest to
 check if 10 and 12 seconds work the same as 15, but before I do fine
@@ -89,7 +89,7 @@ particular DHT11.
 
 <h2>Product quality</h2>
 
-It’s clear that the DHT11 I am testing is not behaving according to old
+It's clear that the DHT11 I am testing is not behaving according to old
 or new specifications for the sampling interval.
 <p>
 Defects happen! No production line output is 100% perfect, so I may just
@@ -205,14 +205,14 @@ And retest after the following modification.
 
 <h2>Stability</h2>
 
-During my test I didn’t noticed big surges in measurements but the time
+During my test I didn't noticed big surges in measurements but the time
 to get to actual value is quite long. The interval between readings
 affects the measurement and initially it takes a long time for the
 readings to converge to actual temperature or humidity.
 
 <h2>Conclusions</h2>
 
-I didn’t find any English version of the latest version of the
+I didn't find any English version of the latest version of the
 datasheet.
 <p>
 I found some difference between the Chinese datasheet and the behavior

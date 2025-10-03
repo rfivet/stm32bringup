@@ -8,7 +8,7 @@
  <body>
 <h1>3.9 Reading a Resistor Value</h1>
 
-I used the ADC previously to read the internal sensors, so it’s simple
+I used the ADC previously to read the internal sensors, so it's simple
 to move on to external ones. Once you can read the value of a resistor,
 there is a wide choice of analog applications: thermistors, photocells,
 potentiometers, sliders, joysticks …
@@ -35,11 +35,11 @@ in the range [0 … 4095], I can express the two voltages in terms of ADC values
 <p>The voltage divider relationship now becomes<br>
 &nbsp;<b><i>VDDA</i> * ADCraw / 4095 = <i>VDDA</i> * Rref / (Rref + Rmeasured)</b>
 <p>which can be further simplified as<br>
-&nbsp;<b>ADCraw * Rmeasured = Rref * (4095 – ADCraw)</b>
+&nbsp;<b>ADCraw * Rmeasured = Rref * (4095 - ADCraw)</b>
 <p>The resistor value is then given by<br>
-&nbsp;<b>Rmeasured = Rref * (4095 – ADCraw) / ADCraw</b><br>
+&nbsp;<b>Rmeasured = Rref * (4095 - ADCraw) / ADCraw</b><br>
 or<br>
-&nbsp;<b>Rmeasured = Rref * (4095 / ADCraw – 1)</b>
+&nbsp;<b>Rmeasured = Rref * (4095 / ADCraw - 1)</b>
 
 <h2>Devil in the whatnots</h2>
 Some of the things to pay attention to while coding
@@ -121,6 +121,10 @@ I add the composition in <b>Makefile</b>
 <p>
 Building up on the previous ADC reading of internal sensors, sampling of
 an external resistor pair connected to one of the IO pin is straightforward.
+</p>
+<p>
+<a href="index.html#part4">Next</a>, I will show the temperature readings on a
+display.
 </p>
     <hr>© 2020-2025 Renaud Fivet
  </body>

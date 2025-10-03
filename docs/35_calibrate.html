@@ -17,13 +17,13 @@ reading at 3.3V (±10mV) and 30℃ (±5℃).
 <img alt="TS_CAL1" src="img/34_tscal1.png">
 <p>
 There is only one point calibration documented and its reference
-temperature is known with a precision of ±5℃. That’s not enough to
+temperature is known with a precision of ±5℃. That's not enough to
 calculate temperature but it shows that the sensor was tested in
 production.
 <p>
 Notice that the calibration value name is <b>TS_CAL1</b>, some other STM32
 chipset families do have a second temperature factory calibration point
-<b>TS_CAL2</b>. Also some don’t have any factory calibration stored at all.
+<b>TS_CAL2</b>. Also some don't have any factory calibration stored at all.
 So you have to refer to the datasheet that matches the chip you are
 targeting when you port your code to a new chipset.
 <p>
@@ -37,7 +37,7 @@ typical average slope of <b>4.3 mV/℃</b> and was calibrated in factory at
 exactly <b>3.3V</b> and <b>30℃</b>, then you could use the following formula
 to calculate the temperature.
 <p>
-<b>T = 30 + (TS_CAL1 * 3.3 – TS_RAW * VDDA) / 4095 / 0.0043</b>
+<b>T = 30 + (TS_CAL1 * 3.3 - TS_RAW * VDDA) / 4095 / 0.0043</b>
 <p>
 with
 <p>
@@ -45,7 +45,7 @@ with
 <p>
 that gives
 <p>
-<b>T = 30 + 3.3 * (TS_CAL1 – TS_RAW * V_CAL / V_RAW) / 4095 / 0.0043</b>
+<b>T = 30 + 3.3 * (TS_CAL1 - TS_RAW * V_CAL / V_RAW) / 4095 / 0.0043</b>
 <p>
 If I express the average slope in raw ADC units per ℃ instead of mV/℃
 <p>
@@ -53,7 +53,7 @@ If I express the average slope in raw ADC units per ℃ instead of mV/℃
 <p>
 the final formula is
 <p>
-<b>T = 30 + (TS_CAL1 – TS_RAW * V_CAL / V_RAW) * 1000 / 5336</b>
+<b>T = 30 + (TS_CAL1 - TS_RAW * V_CAL / V_RAW) * 1000 / 5336</b>
 <p>
 which matches the sample code for temperature computation given in the
 reference manual (RM0360 A.7.16).
@@ -76,7 +76,7 @@ If I use the raw ADC readings from my last run
 <p>
 <b>VDDA = 3.3 * 1526 / 1538 = 3.274V</b>
 <p>
-<b>t = 30 + (1721 – 1718 * 1526 / 1538) * 1000 / 5336 = 33.07℃</b>
+<b>t = 30 + (1721 - 1718 * 1526 / 1538) * 1000 / 5336 = 33.07℃</b>
 <p>
 I confirm the voltage with a voltmeter (measured 3.282V versus 3.274V
 computed). The computed internal temperature value is roughly 5℃ higher
@@ -94,7 +94,7 @@ Memory (3KB) and the option bytes.
 | RAM Memory	| 0x20000000    | 4KB  |
 </pre>
 The calibration data are saved in the last 96 bytes of the System
-Memory, starting at address 0x1FFFF7A0. So it’s simple to dump the
+Memory, starting at address 0x1FFFF7A0. So it's simple to dump the
 content of that zone and compare the values for multiple chips.
 
 <pre>
@@ -136,7 +136,7 @@ temperature += 30;
 
 Factoring in the actual measured voltage, this gives
 <p>
-<b>T = 30 + (TS_CAL1 – TS_RAW * V_CAL / V_RAW) * 80 / (TS_CAL1 – TS_CAL2)</b>
+<b>T = 30 + (TS_CAL1 - TS_RAW * V_CAL / V_RAW) * 80 / (TS_CAL1 - TS_CAL2)</b>
 <p>
 If I use the raw ADC readings from my last run
 
@@ -145,7 +145,7 @@ TSCAL2_SLOPE = (1721 - 1297) / 80 = 5.3 ADC step/℃
              = 3.3 * 5.3 / 4095 = 4.271 mV/℃
 </pre>
 
-<b>t = 30 + (1721 – 1718 * 1526 / 1538) * 80 / (1721 – 1297) = 33.09℃</b>
+<b>t = 30 + (1721 - 1718 * 1526 / 1538) * 80 / (1721 - 1297) = 33.09℃</b>
 <p>
 Which is only 0.02℃ higher than the previous result based on the more
 generic formula. Because the temperature measured is close to the

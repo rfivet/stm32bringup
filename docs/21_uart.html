@@ -15,13 +15,13 @@ to validate that I have working hardware and software tools.
 <h2>Board Connectivity</h2>
 
 Even if the peripheral is capable of doing synchronous communication
-(that’s the S in USART), asynchronous communication (that’s the A) which
+(that's the S in USART), asynchronous communication (that’s the A) which
 only needs 3 wires (GND, TX, RX, (no clock)) is usually what is needed
 in non specialized cases.
 <p>
 Boards sold online often have dedicated pre-soldered pins for UART
 connectivity similar to what I have seen before for the SWD interface.
-The VCC-GND board I used previously doesn’t have such dedicated pins but the
+The VCC-GND board I used previously doesn't have such dedicated pins but the
 functionality is wired on the pins PA9 (<b>TX</b>) and PA10 (<b>RX</b>).
 <p>
 I will use a board with dedicated pins (GND, TX, RX, VCC 3.3V). Board

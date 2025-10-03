@@ -61,7 +61,7 @@ f030f4.elf from startup.txeie.o adc.o adcmain.o
    2644       0      16    2660     a64 f030f4.elf
 </pre>
 <p>
-As I don’t want to turn off size optimization and I am not willing to
+As I don't want to turn off size optimization and I am not willing to
 always pay the full 180 bytes for a production ready <code>memset()</code>
 when it is called only once at startup to clear a few bytes, I ended up adding
 my own version of <code>memset()</code> to my local library.

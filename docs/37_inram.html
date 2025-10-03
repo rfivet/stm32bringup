@@ -17,7 +17,7 @@ the code in flash memory.
 
 <pre>stm32flash -g 0 COM6</pre>
 
-With my current code, this works fine as far as I don’t use interrupt
+With my current code, this works fine as far as I don't use interrupt
 subroutine. <b>ledon</b> and <b>blink</b> both work, but <b>ledtick</b> will
 reset once the <code>SysTick_Handler()</code> interrupt routine is triggered
 for the first time. This is due to the fact that the system memory is still
@@ -87,7 +87,7 @@ the resulting <b>f030f4.map</b> file.
 
 <li> .data and .bss are located from 0x20000000.
 </ul>
-Let’s write this code in RAM and execute it!
+Let's write this code in RAM and execute it!
 
 <pre>
 stm32flash -w blink.bin -S 0x20000800 COM6
@@ -95,7 +95,7 @@ stm32flash -g 0x20000800 COM6
 </pre>
 
 This work just fine but of course the executable of <b>ledon</b> or
-<b>blink</b> doesn’t use interrupt routines.
+<b>blink</b> doesn't use interrupt routines.
 
 <h2>ISR Vector in RAM</h2>
 

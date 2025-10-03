@@ -81,7 +81,7 @@ The ADC characteristics in the STM32F030 datasheet states that the
 maximum ADC sampling clock is 14MHz. It is possible to select either an
 internal 14 MHz clock (HSI14) or PCLK divided by 2 or 4. I want to check
 how the clock affects the readings (HSI14, 28/2, 24/2, 48/4). At first I
-couldn’t manage to make PCLK/4 work until I found the note on ADC
+couldn't manage to make PCLK/4 work until I found the note on ADC
 calibration work around in the errata
 <a href="https://www.st.com/content/st_com/en/search.html#q=%20ES0219-t=resources-page=1"
 >ES0219 2.5.3</a>
@@ -117,7 +117,7 @@ The raw data readings are relative to the analog operative voltage VDDA.
 <b>Vmeasured = VDDA * VRAW / 4095</b>
 <p>
 This is why I measure both voltage and temperature. Ideally, VDDA should
-be 3.3V, in practice it’s highly dependent of the power supply.
+be 3.3V, in practice it's highly dependent of the power supply.
 <p>
 Every chip is calibrated in factory during production, ADC conversion is
 done at 3.3V and 30℃ and the resulting values are stored in system
